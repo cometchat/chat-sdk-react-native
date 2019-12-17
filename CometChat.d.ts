@@ -341,6 +341,14 @@ export namespace CometChat {
         */
     export function getGroup(guid: any): Promise<{}>;
     /**
+        * function to get all the joined groups of logged in User
+        *
+        * @static
+        * @returns Promise<any>
+        * @memberof CometChat
+        */
+    export function getGroups(): Promise<any>;
+    /**
         * function to join the exiting group group.
         * can be use to join the public,private and password groups.
         *
