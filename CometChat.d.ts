@@ -1,6 +1,5 @@
 export namespace CometChat {
     let isNative: boolean;
-
     let USER_STATUS: {
         ONLINE: string;
         OFFLINE: string;
@@ -52,19 +51,6 @@ export namespace CometChat {
     };
 
     let appSettings: AppSettings;
-    /**
-        *Setter method for CometChat authToken.
-        *
-        * @static
-        * @param {string} authToken
-        * @memberof CometChat
-        **/
-
-    /**
-        *Getter method for CometChat authToken.
-        * @returns
-        * @memberof CometChat
-        **/
 
     /**
         * Getter for appId.
@@ -74,6 +60,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function getAppId(): string;
+
     /**
         *Getter for apiKey.
         *
@@ -81,9 +68,11 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function getApiKey(): string;
+
     /**------------------------------------*
         * Core apis     					   *
         *-------------------------------------**/
+
     /**
         * Initialize the CometChat app with the current appId provided as an argument.
         *
@@ -93,6 +82,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function init(appId?: any, appSettings?: AppSettings | any): Promise<boolean>;
+
     /**
         *function to check whether CometChat class initialized before.
         *
@@ -101,6 +91,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function isInitialized(): boolean;
+
     /**
         * Returns the singleton object of CometChat class.
         * if CometChat object is not created yet? it will create and returns it.
@@ -108,20 +99,33 @@ export namespace CometChat {
         * @param appId Optional an argument needed for first time initialization.
         */
     export function getInstance(appId?: string);
+
+    /**
+        * function to register the FCM token for Push Notification.
+        * @static
+        * @param {string} token
+        * @param {JSON Object} Settings
+        * @returns {Promise<string>}
+        * @memberof CometChat
+        */
+    export function registerTokenForPushNotification(token: string, settings?: {}): Promise<string>;
+
     /**
         *	login funtion will authenticate user provided as an argument.
         *	two ways to login
         *	1. with uid and apiKey (unsecure way), double arguments.
-        *  2. with authetoken (secure Way),single argument.
+        *   2. with authetoken (secure Way),single argument.
         * @static
         * @param {...string[]} args
         * @returns
         * @memberof CometChat
         */
-    export function login(...args: any): Promise<{}>;
+    export function login(...args: any): Promise<User>;
+
     /**-------------------------------------------------------------------*
         * Message related functions provided by CometChat class              *
         *--------------------------------------------------------------------**/
+
     /**
         * function will cosume the api to send TextMessage and on success it will add the message to local storage.
         *
@@ -130,7 +134,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendMessage(message: TextMessage | MediaMessage | CustomMessage | any): Promise<{}>;
+    export function sendMessage(message: TextMessage | MediaMessage | CustomMessage | any): Promise<BaseMessage>;
+
     /**
         * Send direct message to user
         *
@@ -139,7 +144,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendDirectMessage(message: Object): Promise<{}>;
+    export function sendDirectMessage(message: Object): Promise<BaseMessage>;
+
     /**
         * send message to group.
         *
@@ -148,7 +154,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendGroupMessage(message: any): Promise<{}>;
+    export function sendGroupMessage(message: any): Promise<BaseMessage>;
+
     /**
         * function will cosume the api to send MediaMessage and on success it will add the message to local storage.
         *
@@ -157,7 +164,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendMediaMessage(message: Object): Promise<{}>;
+    export function sendMediaMessage(message: Object): Promise<MediaMessage>;
+
     /**
         *
         *function will cosume the api to send CustomMessage and on success it will add the message to local storage.
@@ -166,8 +174,10 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendCustomMessage(message: CustomMessage): Promise<{}>;
+    export function sendCustomMessage(message: CustomMessage): Promise<CustomMessage>;
+
     export function getLastDeliveredMessageId(): Promise<any>;
+
     /**
         * Sending the isTyping notification to provided uid/ guid.
         *
@@ -177,6 +187,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function startTyping(typingNotification: TypingIndicator | any): void;
+
     /**
         * Sending the typing paused notification to provided uid/ guid.
         *
@@ -186,6 +197,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function endTyping(typingNotification: TypingIndicator | any): void;
+
     /**
         * Mark all messages upto a specifeied message id as read
         *
@@ -196,6 +208,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function markAsRead(messageId: string, receiverId: string, receiverType: string): void;
+
     /**
         * Mark all messages upto a specifeied message id as delivered
         *
@@ -206,6 +219,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function markAsDelivered(messageId: string, receiverId: string, receiverType: string): void;
+
     /**
         * get the message Information with the help of message id
         *
@@ -214,43 +228,30 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getMessageDetails(messageId: string | any): Promise<{}>;
+    export function getMessageDetails(messageId: string | any): Promise<TextMessage | MediaMessage | CustomMessage | BaseMessage | null>;
+
     /**
-* get the message Information with the help of message id
-*
-* @static
-* @param {(string|any)} messageId
-* @returns
-* @memberof CometChat
-*/
-    export function getMessageReceipts(messageId: string | any): Promise<{}>;
-    /**
-        *
+        * get the message Information with the help of message id
         *
         * @static
+        * @param {(string|any)} messageId
         * @returns
         * @memberof CometChat
         */
-    export function getUnreadMessageCount(doHideMessages?: boolean): Promise<{}>;
-    export function getUnreadMessageCountForAllUsers(doHideMessages?: boolean): Promise<{}>;
-    export function getUnreadMessageCountForAllGroups(doHideMessages?: boolean): Promise<{}>;
-    export function getUnreadMessageCountForUser(UID: string, doHideMessages?: boolean): Promise<{}>;
-    export function getUnreadMessageCountForGroup(GUID: string, doHideMessages?: boolean): Promise<{}>;
-    export function getUndeliveredMessageCount(doHideMessages?: boolean): Promise<{}>;
-    export function getUndeliveredMessageCountForAllUsers(doHideMessages?: boolean): Promise<{}>;
-    export function getUndeliveredMessageCountForAllGroups(doHideMessages?: boolean): Promise<{}>;
-    export function getUndeliveredMessageCountForUser(UID: string, doHideMessages?: boolean): Promise<{}>;
-    export function getUndeliveredMessageCountForGroup(GUID: string, doHideMessages?: boolean): Promise<{}>;
-    /**
-        *
-        *
-        * @static
-        * @param {BaseMessage} message
-        * @returns {Promise<BaseMessage>}
-        * @memberof CometChat
-        */
+    export function getMessageReceipts(messageId: string | any): Promise<Object>;
+    export function getUnreadMessageCount(doHideMessages?: boolean): Promise<Object>;
+    export function getUnreadMessageCountForAllUsers(doHideMessages?: boolean): Promise<Object>;
+    export function getUnreadMessageCountForAllGroups(doHideMessages?: boolean): Promise<Object>;
+    export function getUnreadMessageCountForUser(UID: string, doHideMessages?: boolean): Promise<Object>;
+    export function getUnreadMessageCountForGroup(GUID: string, doHideMessages?: boolean): Promise<Object>;
+    export function getUndeliveredMessageCount(doHideMessages?: boolean): Promise<Object>;
+    export function getUndeliveredMessageCountForAllUsers(doHideMessages?: boolean): Promise<Object>;
+    export function getUndeliveredMessageCountForAllGroups(doHideMessages?: boolean): Promise<Object>;
+    export function getUndeliveredMessageCountForUser(UID: string, doHideMessages?: boolean): Promise<Object>;
+    export function getUndeliveredMessageCountForGroup(GUID: string, doHideMessages?: boolean): Promise<Object>;
     export function editMessage(message: BaseMessage): Promise<BaseMessage>;
-    export function deleteMessage(messageId: string | number): Promise<BaseMessage>;
+    export function deleteMessage(messageId: number): Promise<BaseMessage>;
+
     /**
         * function will accept the limit and timestamp as params and return the promise with array of message.
         *
@@ -260,7 +261,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getPreviousMessagesByTimestamp(limit?: number, timestamp?: number): Promise<{}>;
+    export function getPreviousMessagesByTimestamp(limit?: number, timestamp?: number): Promise<Object>;
+
     /**
         * function will accept the limit and id as params and return the promise with array of message.
         *
@@ -270,7 +272,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getPreviousMessagesById(limit?: number, id?: number): Promise<{}>;
+    export function getPreviousMessagesById(limit?: number, id?: number): Promise<Object>;
+
     /**
         * function will accept the limit and timestamp as params and return the promise with array of message.
         *
@@ -280,7 +283,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getNextMessagesByTimestamp(limit?: number, timestamp?: number): Promise<{}>;
+    export function getNextMessagesByTimestamp(limit?: number, timestamp?: number): Promise<Object>;
+
     /**
         * function will accept the limit and id as params and return the promise with array of message.
         *
@@ -290,7 +294,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getNextMessagesById(limit?: number, id?: number): Promise<{}>;
+    export function getNextMessagesById(limit?: number, id?: number): Promise<Object>;
+
     /**-------------------------------------------------------------------*
         * User related functions provided by CometChat class                 *
         *--------------------------------------------------------------------**/
@@ -301,53 +306,51 @@ export namespace CometChat {
         * @returns {(Promise<AppUser | Error>)}
         * @memberof CometChat
         */
-    export function getUser(uid: any): Promise<User | Error>;
+    export function getUser(uid: any): Promise<User>;
+
     /**
-        * This function will returnms
+        * This function will return logged in user
         *
-        * @returns {Promise<any>}
+        * @returns {Promise<User>}
         * @memberof CometChat
         */
-    export function getLoggedinUser(): Promise<any | CometChatException>;
-    /**
-        * block the users.
-        *
-        * @static
-        * @param {String[]} blockedUids
-        * @returns
-        * @memberof CometChat
-        */
-    export function blockUsers(blockedUids: String[]): Promise<{}>;
-    export function unblockUsers(blockedUids: String[]): Promise<{}>;
+    export function getLoggedinUser(): Promise<User | null>;
+
+    export function blockUsers(blockedUids: String[]): Promise<Object>;
+    export function unblockUsers(blockedUids: String[]): Promise<Object>;
+
     /**-------------------------------------------------------------------*
         * Group related functions provided by CometChat class                *
         *--------------------------------------------------------------------**/
+
     /**
         * function to create group and will also join the XMPP_MUC on success from the create group REST API.
         *
         * @static
         * @param {Group} group
-        * @returns Promise<Group|CometChatException>
+        * @returns Promise<Group>
         * @memberof CometChat
         */
-    export function createGroup(group: any): Promise<{}>;
+    export function createGroup(group: any): Promise<Group>;
+
     /**
         * function to get the information for the group id provided as an argument
         *
         * @static
         * @param {string} guid
-        * @returns Promise<Group|CustomError>
+        * @returns Promise<Group>
         * @memberof CometChat
         */
-    export function getGroup(guid: any): Promise<{}>;
+    export function getGroup(guid: any): Promise<Group>;
     /**
         * function to get all the joined groups of logged in User
         *
         * @static
-        * @returns Promise<any>
+        * @returns Promise<Object>
         * @memberof CometChat
         */
-    export function getGroups(): Promise<any>;
+    export function getJoinedGroups(): Promise<Object>;
+
     /**
         * function to join the exiting group group.
         * can be use to join the public,private and password groups.
@@ -360,6 +363,7 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function joinGroup(grp: any, type?: string, password?: string): Promise<Group>;
+
     /**
         *
         * function update the already existing group and returns the result with updated group
@@ -367,7 +371,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function updateGroup(group: any): Promise<{}>;
+    export function updateGroup(group: any): Promise<Group>;
+
     /**
         * function to delete the exiting group.
         *
@@ -375,7 +380,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function deleteGroup(guid: string): Promise<{}>;
+    export function deleteGroup(guid: string): Promise<boolean>;
+
     /**
         * function to leave the exiting group.
         *
@@ -384,7 +390,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function leaveGroup(guid: string): Promise<{}>;
+    export function leaveGroup(guid: string): Promise<boolean>;
+
     /**
         * function to kick the member from existing group.
         *
@@ -394,7 +401,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function kickGroupMember(guid: string, uid: string): Promise<{}>;
+    export function kickGroupMember(guid: string, uid: string): Promise<boolean>;
+
     /**
         * function to change the scope of the existing group.
         *
@@ -405,7 +413,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function updateGroupMemberScope(guid: string, uid: string, scope: string): Promise<{}>;
+    export function updateGroupMemberScope(guid: string, uid: string, scope: string): Promise<boolean>;
+
     /**
         * function to ban the group member. this method will add the member to list of banned members.
         *
@@ -415,7 +424,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function banGroupMember(guid: string, uid: string): Promise<{}>;
+    export function banGroupMember(guid: string, uid: string): Promise<boolean>;
+
     /**
         * function to unban the member to chat in group propvided as an argument
         *
@@ -425,7 +435,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function unbanGroupMember(guid: string, uid: string): Promise<{}>;
+    export function unbanGroupMember(guid: string, uid: string): Promise<boolean>;
+
     /**
         *Function will return list of added GroupMembers.
         *
@@ -437,9 +448,11 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function addMembersToGroup(guid: string, groupMembers: Array<GroupMember>, bannedMembersList?: Array<string>): Promise<Object>;
+
     /**-------------------------------------------------------------------*
         * Call related functions provided by CometChat class                 *
         *--------------------------------------------------------------------**/
+
     /**
         * function to call the api to initiated outgoing call session with another user or group.
         *
@@ -448,7 +461,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function initiateCall(call: Call): Promise<{}>;
+    export function initiateCall(call: Call): Promise<Call>;
+
     /**
         * function to accept the incoming call from user to group.
         *
@@ -458,7 +472,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function acceptCall(sessionid: string): Promise<{}>;
+    export function acceptCall(sessionid: string): Promise<Call>;
+
     /**
         * function to reject the incoming call,cancle the outgoing call or to end the ongoing call.
         * @static
@@ -467,7 +482,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function rejectCall(sessionId: string, status: any): Promise<{}>;
+    export function rejectCall(sessionId: string, status: any): Promise<Call>;
+
     /**
         * function will inform the server to end the ongoing call with the session id provided as an argument.
         * clears the session for the provided (ongoing) call.
@@ -478,7 +494,8 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function endCall(sessionid: string): Promise<{}>;
+    export function endCall(sessionid: string): Promise<Call>;
+
     /**
         * function will return the active `Call` from `CallManager`
         *
@@ -487,8 +504,9 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function getActiveCall(): Call;
+
     /**
-        * functiom to start the jitsi view in iframe.
+        * function to start the jitsi view in iframe.
         *
         * @static
         * @param {string} sessionId
@@ -513,7 +531,7 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function sendUnansweredResponse(sessionid: string): Promise<{}>;
+    export function sendUnansweredResponse(sessionid: string): Promise<Call>;
     /**-------------------------------------------------------------------------------------------------------*
         * Events listeners setting and removing	.																  *
         *--------------------------------------------------------------------------------------------------------**/
@@ -583,26 +601,25 @@ export namespace CometChat {
         * @returns
         * @memberof CometChat
         */
-    export function getAppSettings(): Promise<any>;
+    export function getAppSettings(): Promise<Object>;
     /**
         * Clears the authtoken from server and clears the local cache.
         *
         * @static
         * @memberof CometChat
         */
-    export function logout(): Promise<{}>;
-    export function isExtensionEnabled(extensionId: string): Promise<{}>;
+    export function logout(): Promise<Object>;
+    export function isExtensionEnabled(extensionId: string): Promise<boolean>;
     export function clearCache(): void;
     export function typingTimer(): void;
 
-
     /**
-    *
-    *
-    * @export
-    * @class Error
-    * @implements {ErrorModel}
-    */
+     *
+     *
+     * @export
+     * @class Error
+     * @implements {ErrorModel}
+     */
     export class CometChatException implements ErrorModel {
         code?: string | number;
         name?: string;
@@ -671,14 +688,14 @@ export namespace CometChat {
         setConversationId(conversationId: string): void;
         setConversationType(conversationType: string): void;
         setLastMessage(lastMessage: TextMessage | MediaMessage | CustomMessage | any): void;
-        setConversationWith(conversationWith: User|Group): void;
+        setConversationWith(conversationWith: User | Group): void;
         setUnreadMessageCount(unreadMessageCount: number | any): void;
-        getConversationId() : string;
-        getConversationType() : string;
-        getLastMessage() : TextMessage | MediaMessage | CustomMessage | any;
-        getConversationWith() : User | Group;
-        getUnreadMessageCount() : number | any;
-        constructor(conversationId: string, conversationType: string, lastMessage: TextMessage | MediaMessage | CustomMessage | any, conversationWith: User|Group, unreadMessageCount: number | any)
+        getConversationId(): string;
+        getConversationType(): string;
+        getLastMessage(): TextMessage | MediaMessage | CustomMessage | any;
+        getConversationWith(): User | Group;
+        getUnreadMessageCount(): number | any;
+        constructor(conversationId: string, conversationType: string, lastMessage: TextMessage | MediaMessage | CustomMessage | any, conversationWith: User | Group, unreadMessageCount: number | any)
     }
 
     export class MediaMessage extends BaseMessage implements Message {
@@ -702,18 +719,18 @@ export namespace CometChat {
             CUSTOM: string;
         };
         protected data?: any;
-        constructor(receiver: string, file: object | string, type: string, receiverType: string);
+        constructor(receiverId: string, file: object | string, type: string, receiverType: string);
         setCaption(text: string): void;
-        getCaption(): any;
+        getCaption(): string;
         getSender(): User;
-        getUrl(): string;
-        setUrl(value: string): void;
+        getReceiver(): User | Group;
         getMetadata(): Object;
         setMetadata(metadata: Object): void;
         getData(): Object;
         setData(value: Object): void;
         getAttachment(): Attachment;
         setAttachment(attachment: Attachment): void;
+        getURL(): string;
     }
 
     export interface Message {
@@ -729,15 +746,16 @@ export namespace CometChat {
         protected conversationId?: string;
         protected muid?: string;
         protected sender?: Me | any;
-        protected receiver?: string;
+        protected receiverId?: string;
+        protected receiver?: User | Group;
         protected type?: string;
         protected category?: string;
         protected receiverType?: string;
         protected sentAt?: number;
         protected deliveredAt?: number;
-        protected readAt?: string;
-        protected deliveredToMeAt?: string;
-        protected readByMeAt?: string;
+        protected readAt?: number;
+        protected deliveredToMeAt?: number;
+        protected readByMeAt?: number;
         protected metadata: Object;
         protected status?: string;
         protected receipts?: any[];
@@ -747,15 +765,19 @@ export namespace CometChat {
         protected editedBy: string;
         protected deletedAt: number;
         protected deletedBy: string;
-        constructor(receiver: string, messageType: string, receiverType: string, category: string);
+        constructor(receiverId: string, messageType: string, receiverType: string, category: string);
         getId(): number;
         setId(value: number): void;
+        getConversationId(): string;
+        setConversationId(value: string): void;
         getMuid(): string;
         setMuid(value: string): void;
         getSender(): User;
         setSender(value: User): void;
-        getReceiver(): string;
-        setReceiver(value: string): void;
+        getReceiver(): User | Group;
+        setReceiver(value: User | Group): void;
+        getReceiverId(): string;
+        setReceiverId(value: string): void;
         getType(): string;
         setType(value: string): void;
         get(): number;
@@ -767,12 +789,12 @@ export namespace CometChat {
         setStatus(value: string): void;
         getDeliveredAt(): number;
         setDeliveredAt?(deliveredAt: number): void;
-        getDeliveredToMeAt(): string;
-        setDeliveredToMeAt?(deliveredToMeAt: string): void;
-        getReadAt?(): string;
-        setReadAt?(readAt: string): void;
-        getReadByMeAt?(): string;
-        setReadByMeAt?(readByMeAt: string): void;
+        getDeliveredToMeAt(): number;
+        setDeliveredToMeAt?(deliveredToMeAt: number): void;
+        getReadAt?(): number;
+        setReadAt?(readAt: number): void;
+        getReadByMeAt?(): number;
+        setReadByMeAt?(readByMeAt: number): void;
         getCategory(): string;
         setCategory(category: string): void;
         setEditedAt(editedAt: number): void;
@@ -783,8 +805,6 @@ export namespace CometChat {
         getDeletedAt(): number;
         setDeletedBy(deletedBy: string): void;
         getDeletedBy(): string;
-        setConversationId(conversationId: string): void;
-        getConversationId(): string;
     }
 
     export class TextMessage extends BaseMessage implements Message {
@@ -795,15 +815,16 @@ export namespace CometChat {
         };
         static readonly CATEGORY: string;
         /**
-          *Creates an instance of TextMessage.
-          * @param {string} receiverUid
-          * @param {string} text
-          * @param {string} senderUid
-          * @param {string} receiverType
-          * @memberof TextMessage
-          */
-        constructor(receiver: string, text: string, receiverType: string);
+         *Creates an instance of TextMessage.
+        * @param {string} receiverUid
+        * @param {string} text
+        * @param {string} senderUid
+        * @param {string} receiverType
+        * @memberof TextMessage
+        */
+        constructor(receiverId: string, text: string, receiverType: string);
         getSender(): User;
+        getReceiver(): User | Group;
         getMetadata(): Object;
         setMetadata(value: Object): void;
         getData(): any;
@@ -827,6 +848,7 @@ export namespace CometChat {
         USERS_MAX_LIMIT: number;
         GROUPS_LIMIT: number;
         GROUPS_MAX_LIMIT: number;
+        CONVERSATION_MAX_LIMIT: number;
         CALL_TIMEOUT: number;
         DEFAULT_MSG_ID: number;
         DEFAULT_MAX_TYPING_INDICATOR_LIMIT: number;
@@ -855,6 +877,7 @@ export namespace CometChat {
     export const XMPP: {
         host: string;
         port: number;
+        ws_url: string;
         bind_url: string;
         deafult_password: string;
         PUBSUB_CHANNEL: string;
@@ -878,6 +901,7 @@ export namespace CometChat {
         MESSAGE_LISTENERS_LIST: string;
         USERS_STORE: string;
         MESSAGES_STORE: string;
+        KEYS_STORE: string;
         STORE_STRING: string;
     };
     export const ResponseConstants: {
@@ -897,6 +921,7 @@ export namespace CometChat {
             KEY_SERVICE: string;
             KEY_ENTITIES: string;
             KEY_ENTITITY: string;
+            KEY_ENTITYTYPE: string;
             KEY_ATTACHMENTS: string;
             CODE_REQUEST_OK: number;
             CODE_BAD_REQUEST: number;
@@ -972,6 +997,7 @@ export namespace CometChat {
             MUID: string;
             SENDER: string;
             RECEIVER: string;
+            RECEIVER_ID: string;
             CATEGORY: string;
             RECEIVER_TYPE: string;
             SENT_AT: string;
@@ -1017,6 +1043,8 @@ export namespace CometChat {
                 SEARCH_KEY: string;
                 ONLY_UPDATES: string;
                 UPDATED_AT: string;
+                CATEGORY: string;
+                TYPE: string;
             };
         };
     };
@@ -1184,6 +1212,7 @@ export namespace CometChat {
             UID: string;
             GUID: string;
             USER: string;
+            NAME: string;
         };
     };
     export const UserConstants: {
@@ -1296,6 +1325,12 @@ export namespace CometChat {
             message: string;
             details: {};
         };
+        INVALID_MEDIA_FILE: {
+            code: string;
+            name: string;
+            message: string;
+            details: {};
+        };
     };
     export const UserErrors: {
         INVALID_STATUS: CometChatException;
@@ -1358,15 +1393,15 @@ export namespace CometChat {
 
     export class Group {
         /**
-          * Creates an instance of Group.
-          * @param {string} guid
-          * @param {string} name
-          * @param {GroupType} type
-          * @param {string} [passsword]
-          * @param {string} [icon]
-          * @param {string} [description]
-          * @memberof Group
-          */
+         * Creates an instance of Group.
+         * @param {string} guid
+         * @param {string} name
+         * @param {GroupType} type
+         * @param {string} [passsword]
+         * @param {string} [icon]
+         * @param {string} [description]
+         * @memberof Group
+         */
         constructor(guid: string, name: string, type: string, passsword?: string, icon?: string, description?: string, hasJoined?: boolean);
         getGuid(): string;
         setGuid(guid: string): void;
@@ -1444,6 +1479,7 @@ export namespace CometChat {
         constructor(...args: any[]);
     }
 
+
     export class Call extends BaseMessage implements Message {
         static readonly TYPE: {
             TEXT: string;
@@ -1485,7 +1521,7 @@ export namespace CometChat {
         protected data: any;
         protected callInitiator: object;
         protected callReceiver: object;
-        constructor(receiver: any, type: any, receiverType: any, category?: any);
+        constructor(receiverId: any, type: any, receiverType: any, category?: any);
         getCallInitiator(): User;
         getCallReceiver(): Group | User;
         setCallInitiator(user: any): void;
@@ -1506,14 +1542,15 @@ export namespace CometChat {
         setRawData(rawData: any): void;
         getRawData(): any;
         setSender(sender: any): void;
+        setReceiver(receiver: any): void;
         /**
-          *Creates an instance of TextMessage.
-          * @param {string} receiverUid
-          * @param {string} text
-          * @param {string} senderUid
-          * @param {string} receiverType
-          * @memberof Actions
-          */
+         *Creates an instance of TextMessage.
+        * @param {string} receiverUid
+        * @param {string} text
+        * @param {string} senderUid
+        * @param {string} receiverType
+        * @memberof Actions
+        */
         static callFromJSON(rawMessage: any): Call | Message;
     }
 
@@ -1537,7 +1574,7 @@ export namespace CometChat {
             * @returns
             * @memberof CallController
             */
-        initiateCall(call: Call): Promise<{}>;
+        initiateCall(call: Call): Promise<Call>;
         /**
             * Called when Incoming call initialized.
             *
@@ -1583,7 +1620,7 @@ export namespace CometChat {
             * @memberof CallController
             */
         unAnswerCall(): void;
-        onCallStarted(call: Call): Promise<{}>;
+        onCallStarted(call: Call): Promise<Call>;
         endCallSession(): void;
         startCall(view: HTMLElement, callEventHandler?: OngoingCallListener, context?: any): void;
         static toggleAudio(): void;
@@ -1658,15 +1695,15 @@ export namespace CometChat {
         setActionOn(on: User | Group | BaseMessage): void;
         getActionOn(): User | Group | BaseMessage;
         setActionFor(actionFor: User | Group | BaseMessage): void;
-        getActionFor(): User | Group | BaseMessage;
+        getActionFor(): User | Group | BaseMessage | any;
         getMetadata(): any;
         setMetadata(metadata: any): void;
     }
 
     export class GroupsRequest {
         constructor(builder?: GroupsRequestBuilder);
-        fetchPrevious(): Promise<Group[] | CometChatException>;
-        fetchNext(): Promise<Group[] | CometChatException>;
+        fetchPrevious(): Promise<Group[] | []>;
+        fetchNext(): Promise<Group[] | []>;
         /**
             * Create the pagination data to send with each request.
             *
@@ -1688,8 +1725,8 @@ export namespace CometChat {
     export class BannedMembersRequest {
         constructor(builder?: BannedMembersRequestBuilder);
         setGUID
-        fetchPrevious(): Promise<Group[] | CometChatException>;
-        fetchNext(): Promise<Group[] | CometChatException>;
+        fetchPrevious(): Promise<GroupMember[] | []>;
+        fetchNext(): Promise<GroupMember[] | []>;
         /**
             * Create the pagination data to send with each request.
             *
@@ -1706,13 +1743,13 @@ export namespace CometChat {
         setLimit(limit: number): this;
         setSearchKeyword(searchKeyword: string): this;
         joinedOnly(hasJoined: boolean): this;
-        build(): GroupsRequest;
+        build(): BannedMembersRequest;
     }
 
     export class GroupMembersRequest {
         constructor(builder?: GroupMembersRequestBuilder | GroupOutCastMembersRequestBuilder);
-        fetchPrevious(): Promise<GroupMember[] | CometChatException>;
-        fetchNext(): Promise<GroupMember[] | CometChatException>;
+        fetchPrevious(): Promise<GroupMember[] | []>;
+        fetchNext(): Promise<GroupMember[] | []>;
         getNextData(): any;
         getPreData(): any;
     }
@@ -1737,8 +1774,8 @@ export namespace CometChat {
             OFFLINE: string;
         };
         constructor(builder?: UsersRequestBuilder);
-        fetchPrevious(): Promise<User[] | CometChatException>;
-        fetchNext(): Promise<User[] | CometChatException>;
+        fetchPrevious(): Promise<User[] | []>;
+        fetchNext(): Promise<User[] | []>;
         getNextData(): any;
         getPreData(): any;
     }
@@ -1760,7 +1797,7 @@ export namespace CometChat {
 
     export class ConversationsRequest {
         constructor(builder?: ConversationsRequestBuilder);
-        fetchNext(): Promise<Conversation[] | CometChatException>;
+        fetchNext(): Promise<Conversation[] | []>;
         getNextData(): any;
     }
     export class ConversationsRequestBuilder {
@@ -1777,8 +1814,8 @@ export namespace CometChat {
 
     export class MessagesRequest {
         constructor(builder?: MessagesRequestBuilder);
-        fetchNext(): Promise<{}>;
-        fetchPrevious(): Promise<{}>;
+        fetchNext(): Promise<BaseMessage[] | []>;
+        fetchPrevious(): Promise<BaseMessage[] | []>;
     }
     export class MessagesRequestBuilder {
         limit?: number;
@@ -1794,7 +1831,7 @@ export namespace CometChat {
         updatedAt?: string;
         onlyUpdate?: number;
         category?: string;
-        type?: string; 
+        type?: string;
         setLimit(limit: number): this;
         setGUID(guid: string): this;
         setUID(uid: string): this;
@@ -1809,11 +1846,11 @@ export namespace CometChat {
         setCategory(category: string): this;
         setType(type: string): this;
         /**
-          *Built the DefaultMessagesRequest
-          *
-          * @returns {DefaultMessagesRequest}
-          * @memberof DefaultMessagesRequestBuilder
-          */
+         *Built the DefaultMessagesRequest
+        *
+        * @returns {DefaultMessagesRequest}
+        * @memberof DefaultMessagesRequestBuilder
+        */
         build(): MessagesRequest;
     }
 
@@ -1834,6 +1871,7 @@ export namespace CometChat {
         getCustomData(): Object;
         setCustomData(customData: Object): void;
         getSender(): User;
+        getReceiver(): User | Group;
         getSubType(): string;
         setSubType(subType: string): void;
         getMetadata(): Object;
@@ -1900,8 +1938,8 @@ export namespace CometChat {
             BLOCKED_BY_ME: string;
         };
         constructor(builder?: BlockedUsersRequestBuilder);
-        fetchPrevious(): Promise<User[] | CometChatException>;
-        fetchNext(): Promise<User[] | CometChatException>;
+        fetchPrevious(): Promise<User[] | []>;
+        fetchNext(): Promise<User[] | []>;
         getNextData(): any;
         getPreData(): any;
     }
@@ -1910,7 +1948,7 @@ export namespace CometChat {
         searchKeyword: string;
         direction: string;
         setLimit(limit: number): this;
-        setSearchKeyWord(searchKeyword: string): this;
+        setSearchKeyword(searchKeyword: string): this;
         setDirection(direction: string): this;
         blockedByMe(): this;
         hasBlockedMe(): this;
@@ -2001,14 +2039,14 @@ export namespace CometChat {
         setReceiver(receiver: string): void;
         getTimestamp(): string;
         setTimestamp(timestamp: string): void;
-        setReadAt(readAt: string): void;
-        getReceivedAt(): string;
-        setDeliveredAt(deliveredAt: string): void;
-        getDeliveredAt(): string;
+        getReadAt(): number;
+        setReadAt(readAt: number): void;
+        setDeliveredAt(deliveredAt: number): void;
+        getDeliveredAt(): number;
         getMessageId(): string;
         setMessageId(messageId: string): void;
         getReceiptType(): string;
         setReceiptType(receiptType?: string): void;
     }
-}
 
+}
