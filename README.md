@@ -35,13 +35,13 @@ First, install via npm
 
 For v2:
 
-```shell
-npm install @cometchat-pro/react-native-chat@2.0.6 --save
+```
+npm install @cometchat-pro/react-native-chat@2.0.7 --save
 ```
 
 Then, import the `CometChat` object wherever you want to use CometChat
 
-```Javascript 
+```
 import { CometChat } from "@cometchat-pro/react-native-chat" 
 ```
 
