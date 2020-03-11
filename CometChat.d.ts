@@ -52,6 +52,8 @@ export namespace CometChat {
 
     let appSettings: AppSettings;
 
+    let CallingComponent: callingComponent;
+
     /**
         * Getter for appId.
         *
@@ -1172,6 +1174,8 @@ export namespace CometChat {
         };
     };
     export const CallConstants: {
+        AUDIO_MODE_SPEAKER: string,
+	    AUDIO_MODE_EARPIECE: string,
         CALL_TYPE_AUDIO: string;
         CALL_TYPE_VIDEO: string;
         CALL_TYPE: {
@@ -1833,6 +1837,40 @@ export namespace CometChat {
         build(): ConversationsRequest;
     }
 
+    export class CallSettings {
+        constructor(builder?: CallSettingsBuilder);
+        getSessionId(): string;
+        isDefaultLayout(): boolean;
+        isEndCallButtonDisable(): boolean;
+        isSwitchCameraButtonDisable(): boolean;
+        isMuteAudioButtonDisable(): boolean;
+        isPauseVideoButtonDisable(): boolean;
+        isAudioModeButtonDisable(): boolean;
+        isAudioOnlyCall(): boolean;
+        getCallEventListener(): OngoingCallListener
+    }
+    export class CallSettingsBuilder {
+        sessionID: string;
+        defaultLayout: boolean;
+        ShowEndCallButton: boolean;
+        ShowSwitchCameraButton: boolean;
+        ShowMuteAudioButton: boolean;
+        ShowPauseVideoButton: boolean;
+        ShowAudioModeButton: boolean;
+        isAudioOnly: boolean;
+        listener: OngoingCallListener;
+        setSessionID(sessionID: string): this;
+        enableDefaultLayout(defaultLayout: boolean): this;
+        showEndCallButton(showEndCallButton: boolean): this;
+        showSwitchCameraButton(showSwitchCameraButton: boolean): this;
+        showMuteAudioButton(showMuteAudioButton: boolean): this;
+        showPauseVideoButton(showPauseVideoButton: boolean): this;
+        showAudioModeButton(showAudioModeButton: boolean): this;
+        setIsAudioOnlyCall(isAudioOnly: boolean): this;
+        setCallEventListener(listener: OngoingCallListener): this;
+        build(): CallSettings;
+    }
+
     export class CometChatHelper {
         static getConversationFromMessage(message: TextMessage | MediaMessage | CustomMessage | any): Promise<Conversation>;
         static processMessage(message: Object): Promise<TextMessage | MediaMessage | CustomMessage | BaseMessage>;
@@ -2073,6 +2111,16 @@ export namespace CometChat {
         setMessageId(messageId: string): void;
         getReceiptType(): string;
         setReceiptType(receiptType?: string): void;
+    }
+
+    export class callingComponent {
+        static AUDIO_MODE_SPEAKER: string;
+        static AUDIO_MODE_EARPIECE: string;
+        switchCamera(): void;
+        endCall(): void;
+        muteAudio(muteAudio: boolean): void;
+        pauseVideo(pauseVideo: boolean): void;
+        setAudioMode(mode: string): void;
     }
 
 }
