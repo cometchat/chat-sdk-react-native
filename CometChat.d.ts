@@ -52,8 +52,6 @@ export namespace CometChat {
 
     let appSettings: AppSettings;
 
-    let CallingComponent: callingComponent;
-
     /**
         * Getter for appId.
         *
@@ -309,7 +307,7 @@ export namespace CometChat {
 	 * @returns Promise<User>
 	 * @memberof CometChat
 	 */
-    export function createUser(user: any | User, apiKey: string): Promise<User>;
+    export function createUser(user: User | any, apiKey: string): Promise<User>;
 
     /**
 	 *
@@ -318,7 +316,7 @@ export namespace CometChat {
 	 * @returns Promise<User>
 	 * @memberof CometChat
 	 */
-    export function updateUser(user: any | User, apiKey: string): Promise<User>;
+    export function updateUser(user: User | any, apiKey: string): Promise<User>;
     
     /**
         * function to get the information for the uid provided as an argument
@@ -555,7 +553,24 @@ export namespace CometChat {
     export function sendUnansweredResponse(sessionid: string): Promise<Call>;
     /**-------------------------------------------------------------------------------------------------------*
         * Events listeners setting and removing	.																  *
-        *--------------------------------------------------------------------------------------------------------**
+        *--------------------------------------------------------------------------------------------------------**/
+    
+    /**
+        * It will add the ConnectionEventListner.
+        *
+        * @param {string} name
+        * @param {Function} callback
+        * @memberof CometChat
+        */
+       export function addConnectionListener(name: string, connectionEventListener: ConnectionListener): void;
+       /**
+            * It will remove the ConnectionEventListner.
+            *
+            * @param {string} name
+            * @memberof CometChat
+            */
+       export function removeConnectionListener(name: string): void;
+
     /**
         * It will add the MessgeEventListener to list of the MessageEventListeners.
         *
@@ -616,6 +631,13 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function removeGroupListener(name: string): void;
+    /**
+        * Get the current connection status
+        *
+        * @returns string
+        * @memberof CometChat
+        */
+    export function getConnectionStatus(): string;
     /**
         * Get the XMPP/ WEBRTC details from the servers
         *
@@ -710,12 +732,12 @@ export namespace CometChat {
         setConversationType(conversationType: string): void;
         setLastMessage(lastMessage: TextMessage | MediaMessage | CustomMessage | any): void;
         setConversationWith(conversationWith: User | Group): void;
-        setUnreadMessageCount(unreadMessageCount: number): void;
+        setUnreadMessageCount(unreadMessageCount: number | any): void;
         getConversationId(): string;
         getConversationType(): string;
         getLastMessage(): TextMessage | MediaMessage | CustomMessage | any;
         getConversationWith(): User | Group;
-        getUnreadMessageCount(): number;
+        getUnreadMessageCount(): number | any;
         constructor(conversationId: string, conversationType: string, lastMessage: TextMessage | MediaMessage | CustomMessage | any, conversationWith: User | Group, unreadMessageCount: number | any)
     }
 
@@ -1174,8 +1196,6 @@ export namespace CometChat {
         };
     };
     export const CallConstants: {
-        AUDIO_MODE_SPEAKER: string,
-	    AUDIO_MODE_EARPIECE: string,
         CALL_TYPE_AUDIO: string;
         CALL_TYPE_VIDEO: string;
         CALL_TYPE: {
@@ -1414,6 +1434,12 @@ export namespace CometChat {
         };
     };
 
+    export const CONNECTION_STATUS: {
+        CONNECTED: string;
+        CONNECTING: string;
+        DISCONNECTED: string;
+    };
+
     export class Group {
         /**
          * Creates an instance of Group.
@@ -1461,6 +1487,7 @@ export namespace CometChat {
         onDisconnected?: Function;
         constructor(...args: any[]);
     }
+    
     export class MessageListener {
         onAction?: Function;
         onTextMessageReceived?: Function;
@@ -1837,40 +1864,6 @@ export namespace CometChat {
         build(): ConversationsRequest;
     }
 
-    export class CallSettings {
-        constructor(builder?: CallSettingsBuilder);
-        getSessionId(): string;
-        isDefaultLayout(): boolean;
-        isEndCallButtonDisable(): boolean;
-        isSwitchCameraButtonDisable(): boolean;
-        isMuteAudioButtonDisable(): boolean;
-        isPauseVideoButtonDisable(): boolean;
-        isAudioModeButtonDisable(): boolean;
-        isAudioOnlyCall(): boolean;
-        getCallEventListener(): OngoingCallListener
-    }
-    export class CallSettingsBuilder {
-        sessionID: string;
-        defaultLayout: boolean;
-        ShowEndCallButton: boolean;
-        ShowSwitchCameraButton: boolean;
-        ShowMuteAudioButton: boolean;
-        ShowPauseVideoButton: boolean;
-        ShowAudioModeButton: boolean;
-        isAudioOnly: boolean;
-        listener: OngoingCallListener;
-        setSessionID(sessionID: string): this;
-        enableDefaultLayout(defaultLayout: boolean): this;
-        showEndCallButton(showEndCallButton: boolean): this;
-        showSwitchCameraButton(showSwitchCameraButton: boolean): this;
-        showMuteAudioButton(showMuteAudioButton: boolean): this;
-        showPauseVideoButton(showPauseVideoButton: boolean): this;
-        showAudioModeButton(showAudioModeButton: boolean): this;
-        setIsAudioOnlyCall(isAudioOnly: boolean): this;
-        setCallEventListener(listener: OngoingCallListener): this;
-        build(): CallSettings;
-    }
-
     export class CometChatHelper {
         static getConversationFromMessage(message: TextMessage | MediaMessage | CustomMessage | any): Promise<Conversation>;
         static processMessage(message: Object): Promise<TextMessage | MediaMessage | CustomMessage | BaseMessage>;
@@ -2111,16 +2104,6 @@ export namespace CometChat {
         setMessageId(messageId: string): void;
         getReceiptType(): string;
         setReceiptType(receiptType?: string): void;
-    }
-
-    export class callingComponent {
-        static AUDIO_MODE_SPEAKER: string;
-        static AUDIO_MODE_EARPIECE: string;
-        switchCamera(): void;
-        endCall(): void;
-        muteAudio(muteAudio: boolean): void;
-        pauseVideo(pauseVideo: boolean): void;
-        setAudioMode(mode: string): void;
     }
 
 }
