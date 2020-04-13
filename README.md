@@ -33,10 +33,8 @@ This guide demonstrates how to add chat to a Javascript application using CometC
 ### NPM
 First, install via npm
 
-For v2:
-
 ```
-npm install @cometchat-pro/react-native-chat@2.0.7 --save
+npm install @cometchat-pro/react-native-chat@2.0.8 --save
 ```
 
 Then, import the `CometChat` object wherever you want to use CometChat

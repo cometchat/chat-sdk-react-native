@@ -1,10 +1,11 @@
 {
   "name": "@cometchat-pro/react-native-chat",
-  "version": "2.0.8-beta3",
+  "version": "2.0.8",
   "description": "A complete chat solution.",
   "main": "CometChat.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd ../.. && npm install --save react-native-cometchat-calling-component@1.2.5 react-native-google-signin@2.0.0 react-native-background-timer@2.1.1 react-native-callstats@3.61.0 react-native-immersive@2.0.0 react-native-keep-awake@4.0.0 react-native-linear-gradient@2.5.6 react-native-sound@0.11.0 react-native-sound@0.11.0 react-native-svg@9.7.1 react-native-svg-transformer@0.13.0 react-native-swipeout@2.3.6 react-native-watch-connectivity@0.2.0 react-native-webrtc@1.75.2 react-native-webview@7.4.1 @react-native-community/netinfo@4.1.5 react-native-calendar-events@github:jitsi/react-native-calendar-events#902e6e92d6bae450a6052f76ba4d02f977ffd8f2"
   },
   "keywords": [
     "CometChat",
