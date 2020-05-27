@@ -52,8 +52,6 @@ export namespace CometChat {
 
     let appSettings: AppSettings;
 
-    let CallingComponent: callingComponent;
-
     /**
         * Getter for appId.
         *
@@ -93,14 +91,6 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function isInitialized(): boolean;
-
-    /**
-        * Returns the singleton object of CometChat class.
-        * if CometChat object is not created yet? it will create and returns it.
-        *
-        * @param appId Optional an argument needed for first time initialization.
-        */
-    export function getInstance(appId?: string);
 
     /**
         * function to register the FCM token for Push Notification.
@@ -665,6 +655,32 @@ export namespace CometChat {
         * @memberof CometChat
         */
     export function logout(): Promise<Object>;
+
+    /**
+     * method to set resource, platform and language variable.
+     *
+     * @static
+     * @param {string} resource
+     * @param {string} platform
+     * @param {string} language
+     * @returns void
+     * @memberof CometChat
+     */
+    export function setSource(resource: string, platform: string, language: string): void;
+
+    /**
+	 * method to call extension API.
+	 *
+	 * @static
+	 * @param {string} slug
+	 * @param {string} method
+	 * @param {string} endpoint
+	 * @param {Object} data
+	 * @returns {Promise<Object>}
+	 * @memberof CometChat
+	 */
+    export function callExtension(slug: string, method: string, endpoint: string, data: Object): Promise<Object>;
+
     export function isExtensionEnabled(extensionId: string): Promise<boolean>;
     export function clearCache(): void;
     export function typingTimer(): void;
@@ -728,7 +744,7 @@ export namespace CometChat {
         setStatusMessage(statusMessage: string): void;
         setBlockedByMe(blockedByMe: boolean): void;
         getBlockedByMe(): boolean;
-        setJasBlockedMe(hasBlockedMe: boolean): void;
+        setHasBlockedMe(hasBlockedMe: boolean): void;
         getHasBlockedMeMe(): boolean;
         constructor(userObj: UserObj | any);
     }
@@ -1205,8 +1221,6 @@ export namespace CometChat {
         };
     };
     export const CallConstants: {
-        AUDIO_MODE_SPEAKER: string,
-	    AUDIO_MODE_EARPIECE: string,
         CALL_TYPE_AUDIO: string;
         CALL_TYPE_VIDEO: string;
         CALL_TYPE: {
@@ -1489,6 +1503,8 @@ export namespace CometChat {
         getScope(): string;
         getJoinedAt(): string;
         setJoinedAt(joinedAt: string): void;
+        getMembersCount(): number;
+        setMembersCount(membersCount: number): void;
     }
 
     export class ConnectionListener {
@@ -1790,7 +1806,6 @@ export namespace CometChat {
 
     export class BannedMembersRequest {
         constructor(builder?: BannedMembersRequestBuilder);
-        setGUID
         fetchPrevious(): Promise<GroupMember[] | []>;
         fetchNext(): Promise<GroupMember[] | []>;
         /**
@@ -1801,14 +1816,13 @@ export namespace CometChat {
             */
         getNextData(): any;
     }
+
     export class BannedMembersRequestBuilder {
         constructor(guid: string);
         limit: number;
         searchKeyword: string;
-        hasJoined: boolean;
         setLimit(limit: number): this;
         setSearchKeyword(searchKeyword: string): this;
-        joinedOnly(hasJoined: boolean): this;
         build(): BannedMembersRequest;
     }
 
@@ -1819,15 +1833,17 @@ export namespace CometChat {
         getNextData(): any;
         getPreData(): any;
     }
+
     export class GroupMembersRequestBuilder {
+        constructor(guid: string);
         limit: number;
         searchKeyword: string;
         guid: string;
-        constructor(guid: string);
         setLimit(limit: number): this;
         setSearchKeyword(searchKeyword: string): this;
         build(): GroupMembersRequest;
     }
+
     export class GroupOutCastMembersRequestBuilder extends GroupMembersRequestBuilder {
         isOutCastReq: boolean;
         constructor(guid: string);
@@ -1872,40 +1888,6 @@ export namespace CometChat {
         setLimit(limit: number): this;
         setConversationType(conversationType: string): this;
         build(): ConversationsRequest;
-    }
-
-    export class CallSettings {
-        constructor(builder?: CallSettingsBuilder);
-        getSessionId(): string;
-        isDefaultLayout(): boolean;
-        isEndCallButtonDisable(): boolean;
-        isSwitchCameraButtonDisable(): boolean;
-        isMuteAudioButtonDisable(): boolean;
-        isPauseVideoButtonDisable(): boolean;
-        isAudioModeButtonDisable(): boolean;
-        isAudioOnlyCall(): boolean;
-        getCallEventListener(): OngoingCallListener
-    }
-    export class CallSettingsBuilder {
-        sessionID: string;
-        defaultLayout: boolean;
-        ShowEndCallButton: boolean;
-        ShowSwitchCameraButton: boolean;
-        ShowMuteAudioButton: boolean;
-        ShowPauseVideoButton: boolean;
-        ShowAudioModeButton: boolean;
-        isAudioOnly: boolean;
-        listener: OngoingCallListener;
-        setSessionID(sessionID: string): this;
-        enableDefaultLayout(defaultLayout: boolean): this;
-        showEndCallButton(showEndCallButton: boolean): this;
-        showSwitchCameraButton(showSwitchCameraButton: boolean): this;
-        showMuteAudioButton(showMuteAudioButton: boolean): this;
-        showPauseVideoButton(showPauseVideoButton: boolean): this;
-        showAudioModeButton(showAudioModeButton: boolean): this;
-        setIsAudioOnlyCall(isAudioOnly: boolean): this;
-        setCallEventListener(listener: OngoingCallListener): this;
-        build(): CallSettings;
     }
 
     export class CometChatHelper {
@@ -2110,17 +2092,17 @@ export namespace CometChat {
             * @returns {Object}
             * @memberof FileObject
             */
-        toJSON(fileObject: Attachment): Object;
-        getFileExtension(): string;
-        setFileExtension(extension: string): void;
-        getFileMimeType(): string;
-        setFileMimeType(mimeType: string): void;
-        getFileName(): string;
-        setFileName(name: string): void;
-        getFileSize(): number;
-        setFileSize(size: number): void;
-        getFileUrl(): string;
-        setFileUrl(url: string): void;
+        toJSON(attachment: Attachment): Object;
+        getExtension(): string;
+        setExtension(extension: string): void;
+        getMimeType(): string;
+        setMimeType(mimeType: string): void;
+        getName(): string;
+        setName(name: string): void;
+        getSize(): number;
+        setSize(size: number): void;
+        getUrl(): string;
+        setUrl(url: string): void;
     }
 
     export class MessageReceipt {
@@ -2144,16 +2126,6 @@ export namespace CometChat {
         setMessageId(messageId: string): void;
         getReceiptType(): string;
         setReceiptType(receiptType?: string): void;
-    }
-
-    export class callingComponent {
-        static AUDIO_MODE_SPEAKER: string;
-        static AUDIO_MODE_EARPIECE: string;
-        switchCamera(): void;
-        endCall(): void;
-        muteAudio(muteAudio: boolean): void;
-        pauseVideo(pauseVideo: boolean): void;
-        setAudioMode(mode: string): void;
     }
 
 }
