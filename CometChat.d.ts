@@ -828,6 +828,7 @@ export namespace CometChat {
     export class BaseMessage implements Message {
         protected id?: number;
         protected conversationId?: string;
+        protected parentMessageId?: string;
         protected muid?: string;
         protected sender?: Me | any;
         protected receiverId?: string;
@@ -849,11 +850,14 @@ export namespace CometChat {
         protected editedBy: string;
         protected deletedAt: number;
         protected deletedBy: string;
+        protected replyCount: number;
         constructor(receiverId: string, messageType: string, receiverType: string, category: string);
         getId(): number;
         setId(value: number): void;
         getConversationId(): string;
         setConversationId(value: string): void;
+        getParentMessageId(): number;
+        setParentMessageId(value: number): void;
         getMuid(): string;
         setMuid(value: string): void;
         getSender(): User;
@@ -889,6 +893,8 @@ export namespace CometChat {
         getDeletedAt(): number;
         setDeletedBy(deletedBy: string): void;
         getDeletedBy(): string;
+        setReplyCount(replyCount: number): void;
+        getReplyCount(): number;
     }
 
     export class TextMessage extends BaseMessage implements Message {
@@ -1128,6 +1134,7 @@ export namespace CometChat {
                 UPDATED_AT: string;
                 CATEGORY: string;
                 TYPE: string;
+                HIDE_REPLIES: string;
             };
         };
     };
@@ -1927,6 +1934,7 @@ export namespace CometChat {
         maxLimit: number;
         uid?: string;
         guid?: string;
+        parentMessageId?: number;
         timestamp?: number;
         id?: number;
         unread?: boolean;
@@ -1936,9 +1944,11 @@ export namespace CometChat {
         onlyUpdate?: number;
         category?: string;
         type?: string;
+        hideThreadedMessages?: boolean;
         setLimit(limit: number): this;
         setGUID(guid: string): this;
         setUID(uid: string): this;
+        setParentMessageId(parentMessageId: number): this
         setTimestamp(timestamp?: number): this;
         setMessageId(id?: number): this;
         setUnread(unread?: boolean): this;
@@ -1948,6 +1958,7 @@ export namespace CometChat {
         updatesOnly(onlyUpdate: boolean): this;
         setCategory(category: string): this;
         setType(type: string): this;
+        hideReplies(hideReplies: boolean): this;
         /**
          *Built the DefaultMessagesRequest
         *
@@ -2081,6 +2092,7 @@ export namespace CometChat {
         subscribePresenceForRoles(roles: string[]): this;
         subscribePresenceForFriends(): this;
         setRegion(region?: string): this;
+        enableAutoJoinForGroups(isAutoJoinEnabled: boolean): this;
         build(): AppSettings;
     }
 
