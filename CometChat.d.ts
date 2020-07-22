@@ -52,6 +52,8 @@ export namespace CometChat {
 
     let appSettings: AppSettings;
 
+    let CallingComponent: callingComponent;
+
     /**
         * Getter for appId.
         *
@@ -766,6 +768,10 @@ export namespace CometChat {
     export class Me extends User {
         constructor(userObj: UserObj | any);
         getWsChannel(): any;
+    }
+
+    export class RTCUser {
+        constructor(uid: string, name: string, avatar: string);
     }
 
     export class Conversation {
@@ -1919,6 +1925,32 @@ export namespace CometChat {
         build(): ConversationsRequest;
     }
 
+    export class CallSettings {
+        constructor(builder?: CallSettingsBuilder);
+        getSessionId(): string;
+        isAudioOnlyCall(): boolean;
+        isDefaultLayoutEnabled(): boolean;
+        getUser(): RTCUser;
+        getRegion(): string;
+        getCallEventListener(): OngoingCallListener
+    }
+
+    export class CallSettingsBuilder {
+        sessionID: string;
+        defaultLayout: boolean;
+        isAudioOnly: boolean;
+        region: string;
+        user: RTCUser;
+        listener: OngoingCallListener;
+        setSessionID(sessionID: string): this;
+        enableDefaultLayout(defaultLayout: boolean): this;
+        setIsAudioOnlyCall(isAudioOnly: boolean): this;
+        setRegion(region: string): this;
+        setUser(user: RTCUser): this;
+        setCallEventListener(listener: OngoingCallListener): this;
+        build(): CallSettings;
+    }
+
     export class CometChatHelper {
         static getConversationFromMessage(message: TextMessage | MediaMessage | CustomMessage | any): Promise<Conversation>;
         static processMessage(message: Object): Promise<TextMessage | MediaMessage | CustomMessage | BaseMessage>;
@@ -2160,6 +2192,10 @@ export namespace CometChat {
         setMessageId(messageId: string): void;
         getReceiptType(): string;
         setReceiptType(receiptType?: string): void;
+    }
+
+    export class callingComponent{
+
     }
 
 }

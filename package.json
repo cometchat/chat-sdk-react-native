@@ -1,10 +1,11 @@
 {
   "name": "@cometchat-pro/react-native-chat",
-  "version": "2.0.12",
+  "version": "2.1.0-beta2",
   "description": "A complete chat solution.",
   "main": "CometChat.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd ../.. && npm install --save @cometchat-pro/react-native-calls@0.0.6"
   },
   "keywords": [
     "CometChat",
