@@ -25,6 +25,15 @@ export namespace CometChat {
         MEMBER_INVITED: string;
         MEMBER_SCOPE_CHANGED: string;
     };
+    let CALL_MODE: {
+        DEFAULT: string,
+		SPOTLIGHT: string,
+		SINGLE: string,
+    };
+    let AUDIO_MODE: {
+        SPEAKER: string,
+		EARPIECE: string
+    };
     let CALL_TYPE: {
         AUDIO: string;
         VIDEO: string;
@@ -1745,6 +1754,11 @@ export namespace CometChat {
         onCallStarted(call: Call): Promise<Call>;
         endCallSession(): void;
         startCall(view: HTMLElement, callEventHandler?: OngoingCallListener, context?: any): void;
+        switchCamera(): void;
+        muteAudio(muteAudio: boolean): void;
+        pauseVideo(pauseVideo: boolean): void;
+        setAudioMode(mode: string): void;
+        endSession(): void;
         static toggleAudio(): void;
         static toggleVideo(): void;
         static leave(): void;
@@ -2218,16 +2232,6 @@ export namespace CometChat {
     }
 
     export class callingComponent{
-        AUDIO_MODE_SPEAKER: string;
-        AUDIO_MODE_EARPIECE: string;
-        MODE_DEFAULT: string;
-        MODE_SPOTLIGHT: string;
-        MODE_SINGLE: string;
-        switchCamera(): void;
-        endCall(): void;
-        muteAudio(muteAudio: boolean): void;
-        pauseVideo(pauseVideo: boolean): void;
-        setAudioMode(mode: string): void;
     }
 
 }
