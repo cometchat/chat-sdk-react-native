@@ -27,12 +27,12 @@ export namespace CometChat {
     };
     let CALL_MODE: {
         DEFAULT: string,
-		SPOTLIGHT: string,
-		SINGLE: string,
+	SPOTLIGHT: string,
+	SINGLE: string,
     };
     let AUDIO_MODE: {
         SPEAKER: string,
-		EARPIECE: string
+	EARPIECE: string
     };
     let CALL_TYPE: {
         AUDIO: string;
@@ -482,6 +482,17 @@ export namespace CometChat {
         */
     export function addMembersToGroup(guid: string, groupMembers: Array<GroupMember>, bannedMembersList: Array<string>): Promise<Object>;
 
+    /**
+        * function to transfer the ownership of the group.
+        *
+        * @static
+        * @param {string} guid
+        * @param {string} uid
+        * @returns {Promise<string>}
+        * @memberof CometChat
+        */
+    export function transferGroupOwnership(guid: string, uid: string): Promise<string>;
+
     /**-------------------------------------------------------------------*
         * Call related functions provided by CometChat class                 *
         *--------------------------------------------------------------------**/
@@ -538,24 +549,6 @@ export namespace CometChat {
         */
     export function getActiveCall(): Call;
 
-    /**
-        * function to start the jitsi view in iframe.
-        *
-        * @static
-        * @param {string} sessionId
-        * @param {HTMLElement} view
-        * @param {UserCallEventListener} [callEventHandler]
-        * @memberof CometChat
-        */
-    export function startCall(sessionId: string, view: HTMLElement, callEventHandler?: OngoingCallListener, context?: any): void;
-    export function toggleAudio(): void;
-    export function toggleVideo(): void;
-    export function leaveCall(): void;
-    export function createCallView(context: any): {
-        prop1: typeof CometChat.makeCall;
-        onMessage: (event: any) => void;
-    };
-    export function makeCall(context: any, uri: string): void;
     /**
         * function will inform the server that current outgoing call is timedout for the call with the session id provided as an argument.
         * and will also add the same in localstorage on success.
@@ -1258,13 +1251,15 @@ export namespace CometChat {
         };
     };
     export const CallConstants: {
-        AUDIO_MODE_SPEAKER: string;
-        AUDIO_MODE_EARPIECE: string;
-        MODE_DEFAULT: string;
-        MODE_SPOTLIGHT: string;
-        MODE_SINGLE: string;
-        CALL_TYPE_AUDIO: string;
-        CALL_TYPE_VIDEO: string;
+        CALL_MODE: {
+            DEFAULT: string,
+            SPOTLIGHT: string,
+            SINGLE: string,
+        };
+        AUDIO_MODE:{
+            SPEAKER: string,
+            EARPIECE: string,
+        };
         CALL_TYPE: {
             AUDIO: string;
             VIDEO: string;
