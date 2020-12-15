@@ -765,6 +765,8 @@ export namespace CometChat {
         getBlockedByMe(): boolean;
         setHasBlockedMe(hasBlockedMe: boolean): void;
         getHasBlockedMe(): boolean;
+        setTags(tags: Array<String>): void;
+        getTags(): Array<String>;
         constructor(userObj: UserObj | any);
     }
     export class Me extends User {
@@ -1542,6 +1544,8 @@ export namespace CometChat {
         setJoinedAt(joinedAt: string): void;
         getMembersCount(): number;
         setMembersCount(membersCount: number): void;
+        getTags(): Array<String>;
+        setTags(tags: Array<String>): void;
     }
 
     export class ConnectionListener {
@@ -1850,6 +1854,8 @@ export namespace CometChat {
         setLimit(limit: number): this;
         setSearchKeyword(searchKeyword: string): this;
         joinedOnly(hasJoined: boolean): this;
+        withTags(withTags: boolean): this;
+        setTags(tags: Array<String>): this;
         build(): GroupsRequest;
     }
 
@@ -1927,6 +1933,8 @@ export namespace CometChat {
         setRole(role: string): this;
         setRoles(roles: Array<String>): this;
         friendsOnly(friendsOnly: boolean): this;
+        setTags(tags: Array<String>): this;
+        withTags(withTags: boolean): this;
         build(): UsersRequest;
     }
 
