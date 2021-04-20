@@ -40,7 +40,9 @@ export namespace CometChat {
     };
     let AUDIO_MODE: {
         SPEAKER: string,
-	EARPIECE: string
+        EARPIECE: string,
+        BLUETOOTH: "BLUETOOTH",
+        HEADPHONES: "HEADPHONES"
     };
     let CALL_TYPE: {
         AUDIO: string;
@@ -1303,6 +1305,8 @@ export namespace CometChat {
         AUDIO_MODE:{
             SPEAKER: string,
             EARPIECE: string,
+            BLUETOOTH: string,
+            HEADPHONES: string
         };
         CALL_TYPE: {
             AUDIO: string;
@@ -1642,6 +1646,7 @@ export namespace CometChat {
         onCallEnded?: Function;
         onError?: Function;
         onUserListUpdated?: Function;
+        onAudioModesUpdated?: Function;
         constructor(...args: any[]);
     }
     export class LoginListener {
@@ -1801,6 +1806,7 @@ export namespace CometChat {
         pauseVideo(pauseVideo: boolean): void;
         setAudioMode(mode: string): void;
         endSession(): void;
+        getAudioOutputModes(): Promise<AudioMode[]>
         static toggleAudio(): void;
         static toggleVideo(): void;
         static leave(): void;
@@ -2008,6 +2014,7 @@ export namespace CometChat {
         isAudioModeButtonEnabled(): boolean;
         getStartWithAudioMuted(): boolean;
         getStartWithVideoMuted(): boolean;
+        getDefaultAudioMode(): string
     }
 
     export class CallSettingsBuilder {
@@ -2023,6 +2030,7 @@ export namespace CometChat {
         ShowAudioModeButton: boolean;
         StartAudioMuted: boolean;
         StartVideoMuted: boolean;
+        defaultAudioMode: string;
 
         setSessionID(sessionID: string): this;
         enableDefaultLayout(defaultLayout: boolean): this;
@@ -2036,7 +2044,14 @@ export namespace CometChat {
         showAudioModeButton(showAudioModeButton: boolean): this;
         startWithAudioMuted(audioMuted: boolean): this;
         startWithVideoMuted(videoMuted: boolean): this;
+        setDefaultAudioMode(audioMode: string): this;
         build(): CallSettings;
+    }
+
+    export class AudioMode {
+        constructor(mode, isSelected);
+        getMode(): string;
+        getIsSelected(): boolean;
     }
 
     export class CometChatHelper {
