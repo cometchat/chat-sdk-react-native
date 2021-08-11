@@ -228,6 +228,15 @@ export namespace CometChat {
     export function markAsDelivered(...args: any): void;
 
     /**
+	 * Send a transient message.
+	 *
+	 * @static
+	 * @param {TransientMessage} transientMessage
+	 * @memberof CometChat
+	 */
+    export function sendTransientMessage(transientMessage: TransientMessage | any): void;
+    
+    /**
         * get the message Information with the help of message id
         *
         * @static
@@ -254,6 +263,27 @@ export namespace CometChat {
     export function editMessage(message: BaseMessage): Promise<BaseMessage>;
     export function deleteMessage(messageId: number): Promise<BaseMessage>;
     
+    /**---------------------------------------------------------------------------------------*
+     * Online User/Group Member count related functions provided by CometChat class           *
+     *----------------------------------------------------------------------------------------**/
+    
+    /**
+	 * This function will return online user count
+	 *
+	 * @returns {Promise<number>}
+	 * @memberof CometChat
+	 */
+     export function getOnlineUserCount(): Promise<number>;
+
+     /**
+      * This function will return online group members count for given GUIDs
+      *
+      * @param {String[]} groups
+      * @returns {Promise<number>}
+      * @memberof CometChat
+      */
+    export function getOnlineGroupMemberCount(groups: String[]): Promise<Object>;
+    
     /**-------------------------------------------------------------------*
         * User related functions provided by CometChat class                 *
         *--------------------------------------------------------------------**/
@@ -277,12 +307,12 @@ export namespace CometChat {
     export function updateUser(user: User | any, apiKey: string): Promise<User>;
     
     /**
-     *
-     * function to update the logged-in user and returns the result with updated user
-     * @param {User} user
-     * @returns Promise<User>
-     * @memberof CometChat
-     */
+	 *
+	 * function to update the logged-in user and returns the result with updated user
+	 * @param {User} user
+	 * @returns Promise<User>
+	 * @memberof CometChat
+	 */
     export function updateCurrentUserDetails(user: User | any): Promise<User>
 
     /**
@@ -1589,6 +1619,7 @@ export namespace CometChat {
         onMessagesRead?: Function;
         onMessageEdited?: Function;
         onMessageDeleted?: Function;
+        onTransientMessageReceived?: Function;
         constructor(...args: any[]);
     }
     export class CallListener {
@@ -1977,6 +2008,7 @@ export namespace CometChat {
         limit: number;
         setLimit(limit: number): this;
         setConversationType(conversationType: string): this;
+        withUserAndGroupTags(getUserAndGroupTags: boolean): this;
         build(): ConversationsRequest;
     }
 
@@ -2097,6 +2129,18 @@ export namespace CometChat {
         setReceiverId(receiverId: string): void;
         getMetadata(): Object;
         setMetadata(meta: Object): void;
+        getSender(): User;
+        setSender(sender: User): void;
+    }
+
+    export class TransientMessage {
+        constructor(receiverId: string, receiverType: string, data: any);
+        getReceiverId(): string;
+        setReceiverId(receiverId: string): void;
+        getReceiverType(): string;
+        setReceiverType(receiverType: string): void;
+        getData(): any;
+        setData(data: any): void;
         getSender(): User;
         setSender(sender: User): void;
     }
