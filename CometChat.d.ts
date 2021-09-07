@@ -216,7 +216,7 @@ export namespace CometChat {
         * @param { ...string[] | (BaseMessage | TextMessage | MediaMessage | CustomMessage | any)  } args
         * @memberof CometChat
         */
-    export function markAsRead(...args: any): void;
+    export function markAsRead(...args: any): any;
 
     /**
 	    * Mark all messages upto a specified message id as delivered
@@ -225,7 +225,7 @@ export namespace CometChat {
 	    * @param { ...string[] | (BaseMessage | TextMessage | MediaMessage | CustomMessage | any)  } args
 	    * @memberof CometChat
 	    */
-    export function markAsDelivered(...args: any): void;
+    export function markAsDelivered(...args: any): any;
 
     /**
 	 * Send a transient message.
