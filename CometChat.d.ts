@@ -751,6 +751,24 @@ export namespace CometChat {
     export function typingTimer(): void;
 
     /**
+	 * Method to connect to WS server.
+	 *
+	 * @static
+	 * @returns void
+	 * @memberof CometChat
+	*/
+    export function connect(): void;
+
+    /**
+	 * Method to disconnect from WS server
+	 *
+	 * @static
+	 * @returns void
+	 * @memberof CometChat
+	*/
+    export function disconnect(): void;
+
+    /**
      *
      *
      * @export
@@ -2244,20 +2262,27 @@ export namespace CometChat {
         subscriptionType: string;
         roles: string[];
         region: string;
+        autoJoinGroup: boolean;
+        establishSocketConnection: boolean;
         constructor(builder: AppSettingsBuilder);
         getSubscriptionType(): string;
         getRoles(): string[];
         getRegion(): string;
+        getIsAutoJoinEnabled(): boolean;
+        getEstablishSocketConnection(): boolean;
     }
     export class AppSettingsBuilder {
         subscriptionType: string;
         roles: string[];
         region: string;
+        autoJoinGroup: boolean;
+        establishSocketConnection: boolean;
         subscribePresenceForAllUsers(): this;
         subscribePresenceForRoles(roles: string[]): this;
         subscribePresenceForFriends(): this;
         setRegion(region?: string): this;
         enableAutoJoinForGroups(isAutoJoinEnabled: boolean): this;
+        autoEstablishSocketConnection(establishSocketConnection: boolean): this;
         build(): AppSettings;
     }
 
