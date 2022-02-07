@@ -557,6 +557,13 @@ export namespace CometChat {
         export function getActiveCall(): Call;
         
         /**
+         * Function to start a call.
+         * @param {CallSettings} callSettings
+         * @memberof CometChat
+        */
+        export function startCall(callSettings: CallSettings): void;
+
+        /**
             * Function to fetch participant count of an ongoing call.
             * @param {string} sessionId
             * @param {string} type
