@@ -2573,6 +2573,22 @@ export class OngoingCallListener {
             * This event is triggered when an error occurs.
          */
         onError?: Function;
+        /**
+         * This event is triggered when someone starts recording the call.
+        */
+        onRecordingStarted?: Function;
+        /**
+          * This event is triggered when someone stops recording the call.
+        */
+        onRecordingStopped?: Function;
+        /**
+          * This event is triggered when a user is muted.
+         */
+        onUserMuted?: Function;
+        /**
+          * This event is triggered when an audio call is switched to a video call.
+        */
+        onCallSwitchedToVideo?: Function;
         constructor(...args: any[]);
 }
 export class LoginListener {
@@ -2815,6 +2831,21 @@ export class CallController {
          * @returns {Promise<AudioMode[] | []>}
         */
         getAudioOutputModes(): Promise<AudioMode[] | []>;
+
+        /**
+         * Method to switch an audio call to video call.
+        */
+        switchToVideoCall(): void;
+
+        /**
+          * Method to Start Call Recording.
+        */
+        startRecording(): void;
+ 
+        /**
+         * Method to Stop Call Recording.
+        */
+        stopRecording(): void;
 }
 
 /**
@@ -3940,6 +3971,10 @@ export class CallSettings {
         getStartWithVideoMuted(): boolean;
         getAnalyticsSettings(): Object;
         getDefaultAudioMode(): string;
+        isAudioToVideoButtonEnabled(): boolean;
+        getAvatarMode(): string;
+        isRecordingButtonEnabled(): boolean;
+        shouldStartRecordingOnCallStart(): boolean;
 }
 export class CallSettingsBuilder {
         /** @private */ sessionID: string;
@@ -3960,6 +3995,10 @@ export class CallSettingsBuilder {
         /** @private */ analyticsSettings: Object;
         /** @private */ appId: string;
         /** @private */ defaultAudioMode: string;
+        /** @private */ ShowSwitchToVideoCallButton: boolean;
+        /** @private */ AvatarMode: string;
+        /** @private */ ShowRecordingButton: boolean;
+        /** @private */ StartRecordingOnCallStart: boolean;
         /**
             *
             * @param {string} sessionID
@@ -4111,6 +4150,44 @@ export class CallSettingsBuilder {
             * @returns
          */
         setDefaultAudioMode(audioMode: string): this;
+        /**
+         * 
+         * @param {boolean} showAudioToVideoSwitchButton 
+         * This method shows/hides the switch to video call button.
+         * If set to true it will display the switch to video call button. 
+         * If set to false it will hide the switch to video call button.
+         * Default value is true.
+         * @returns 
+        */
+        showSwitchToVideoCallButton(showAudioToVideoSwitchButton: boolean): this;
+        /**
+          * 
+          * @param {string} mode 
+          * This method sets the mode of avatar.
+          * The avatar mode can be circle, square or fullscreen.
+          * Default value is circle.
+          * @returns 
+         */
+        setAvatarMode(mode: string);
+        /**
+          * 
+          * @param {boolean} showRecordingButton 
+          * This method shows/hides the recording button.
+          * If set to true it will display the recording button. 
+          * If set to false it will hide the recording button.
+          * Default value is false.
+          * @returns 
+         */
+        showRecordingButton(showRecordingButton: boolean): this;
+        /**
+          * 
+          * @param {boolean} startRecordingOnCallStart 
+          * This method starts the recording as soon as the call start.
+          * If set to true it will start the recording as soon as the call start.
+          * Default value is false.
+          * @returns 
+         */
+        startRecordingOnCallStart(startRecordingOnCallStart: boolean): this;
         /**
             * This method will return an object of the CallSettings class.
             * @returns {CallSettings}
