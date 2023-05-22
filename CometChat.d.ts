@@ -4223,7 +4223,7 @@ export class CallSettingsBuilder {
           * Default value is circle.
           * @returns 
          */
-        setAvatarMode(mode: string);
+        setAvatarMode(mode: string): this;
         /**
           * 
           * @param {boolean} showRecordingButton 
@@ -4287,7 +4287,7 @@ export class MainVideoContainerSetting{
      * The default value is `contain`.
      * @returns 
     */
-    setMainVideoAspectRatio(mainVideoAspectRatio: string);
+    setMainVideoAspectRatio(mainVideoAspectRatio: string): void;
     
     /**
      * 
@@ -4297,7 +4297,7 @@ export class MainVideoContainerSetting{
      * By default the full screen button is visible in the `bottom-right` position.
      * @returns 
     */
-    setFullScreenButtonParams(position: string, visibility: boolean);
+    setFullScreenButtonParams(position: string, visibility: boolean): void;
 
     /**
      * 
@@ -4308,7 +4308,7 @@ export class MainVideoContainerSetting{
      * By default the name label is visible in the `bottom-right` position with a background-color `#333333`.
      * @returns 
     */
-    setNameLabelParams(position: string, visibility: boolean, backgroundColor: string);
+    setNameLabelParams(position: string, visibility: boolean, backgroundColor: string): void;
 
     /**
      * 
@@ -4318,7 +4318,7 @@ export class MainVideoContainerSetting{
      * By default the zoom button is visible in the `bottom-right` position.
      * @returns 
     */
-    setZoomButtonParams(position: string, visibility: boolean);
+    setZoomButtonParams(position: string, visibility: boolean): void;
 
     /**
      * 
@@ -4328,7 +4328,7 @@ export class MainVideoContainerSetting{
      * By default the user list button is visible in the `bottom-right` position.
      * @returns 
     */
-    setUserListButtonParams(position: string, visibility: boolean);
+    setUserListButtonParams(position: string, visibility: boolean): void;
 }
 
 type MyState = {
