@@ -12,8 +12,8 @@
 
 # CometChat React Native SDK
 
-CometChat Pro enables you to add voice, video & text chat for your website & app.
-This guide demonstrates how to add chat to a React Native App using CometChat Pro.
+CometChat enables you to add voice, video & text chat for your website & app.
+This guide demonstrates how to add chat to a React Native App using CometChat.
 
 ## Features
 
@@ -76,10 +76,10 @@ To setup React Native SDK, you  need to first register on CometChat Dashboard. [
 <ul>
 <li>
 <b>Install via NPM</b><br/>
-1. Run the following command to install the CometChat Pro React Native SDK<br/>
+1. Run the following command to install the CometChat React Native SDK<br/>
 
 ```javascript
-	npm install @cometchat-pro/react-native-chat@3.0.11 --save
+	npm install @cometchat/chat-sdk-react-native@4.0.0-beta3 --save
 ```
 
  You can refer to the below link for instructions on how to do so:<br/>
@@ -163,7 +163,7 @@ CometChat.getLoggedinUser().then(
 
 <hr/>
 
-📝 Please refer to our [Developer Documentation](https://prodocs.cometchat.com/docs/react-native-quick-start) for more information on how to configure the CometChat Pro SDK and implement various features using the same.
+📝 Please refer to our [Developer Documentation](https://prodocs.cometchat.com/docs/react-native-quick-start) for more information on how to configure the CometChat SDK and implement various features using the same.
 
 <hr/>
 
