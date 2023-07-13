@@ -79,7 +79,7 @@ To setup React Native SDK, you  need to first register on CometChat Dashboard. [
 1. Run the following command to install the CometChat React Native SDK<br/>
 
 ```javascript
-	npm install @cometchat/chat-sdk-react-native@4.0.0-beta3 --save
+	npm install @cometchat/chat-sdk-react-native@4.0.0-beta5 --save
 ```
 
  You can refer to the below link for instructions on how to do so:<br/>
