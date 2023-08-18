@@ -764,8 +764,17 @@ export namespace CometChat {
             * @returns void
             * @memberof CometChat
         */
-        export function connect(): void;
+        export function connect(props?: {onSuccess?: Function, onError?: Function}): void;
         
+        /**
+            *
+            * Method to ping the WebSocket.
+            *
+            * @static
+            * @returns void
+            * @memberof CometChat
+        */
+        export function ping(props: {onError?: Function, onSuccess?: Function}): void;
         /**
             *
             * Method to disconnect from WebSocket server.
@@ -774,7 +783,7 @@ export namespace CometChat {
             * @returns void
             * @memberof CometChat
         */
-        export function disconnect(): void;
+        export function disconnect(props?: {onSuccess?: Function, onError?: Function}): void;
 
 
 /**
