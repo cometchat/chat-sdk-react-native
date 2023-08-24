@@ -2648,6 +2648,10 @@ export class ConnectionListener {
          */
         onDisconnected?: Function;
         /**
+         * This event is triggered when the WebSocket connection gets interrupted.
+        */
+        onConnectionError?: Function;
+        /**
             * This event is triggered when the WebSocket connection is in feature throttled state.
          */
         onFeatureThrottled?: Function;
