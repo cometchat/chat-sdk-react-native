@@ -746,7 +746,23 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function callExtension(slug: string, method: string, endpoint: string, data?: Object): Promise<Object>;
-        
+        /**
+            * Function to get conversation starter for a particular conversation.
+            * @param {string} receiverId
+            * @param {string} receiverType
+            * @returns {Promise<Object>}
+            * @memberof CometChat
+            */
+        export function getConversationStarter(receiverId: string, receiverType: string): Promise<Object>;
+        /**
+            * Function to get smart reply in a particular conversation.
+            * @param {string} receiverId
+            * @param {string} receiverType
+            * @returns {Promise<Object>}
+            * @memberof CometChat
+            */
+        export function getSmartReply(receiverId: string, receiverType: string): Promise<Object>;
+
         /**
             * Function to set resource, platform and language variable.
             * @param {string} resource
@@ -1517,8 +1533,11 @@ export const ResponseConstants: {
             USER: string;
             GROUP: string;
         };
+        KEY_CONVERSATION_STARTER: string;
+        KEY_SMART_REPLIES: string;
     };
 };
+
 export const DELIVERY_RECEIPTS: {
     RECEIVER_ID: string;
     RECEIVER_TYPE: string;
@@ -2104,6 +2123,20 @@ export const ConversationErrors: {
         details: string;
     };
     CONVERSATION_NOT_FOUND: {
+        code: string;
+        name: string;
+        message: string;
+        details: string;
+    };
+};
+export const AIErrors: {
+    NO_CONVERSATION_STARTER: {
+        code: string;
+        name: string;
+        message: string;
+        details: string;
+    };
+    NO_SMART_REPLY: {
         code: string;
         name: string;
         message: string;
