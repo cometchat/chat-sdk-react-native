@@ -823,7 +823,7 @@ export interface UserObj {
         avatar: string;
         lastActiveAt: number;
         link: string;
-        metadata: string;
+        metadata: Object;
         role: string;
         status: string;
         statusMessage: string;
@@ -895,14 +895,14 @@ export class User {
         setLink(link: string): string;
         /**
             * Method to get metadata of the user.
-            * @returns {string}
+            * @returns {Object}
          */
-        getMetadata(): string;
+        getMetadata(): Object;
         /**
             * Method to set metadata of the user.
-            * @param {string} metadata
+            * @param {Object} metadata
          */
-        setMetadata(metadata: string): void;
+        setMetadata(metadata: Object): void;
         /**
             * Method to get role of the user.
             * @returns {string}
@@ -2405,14 +2405,14 @@ export class Group {
         setOwner(owner: string): void;
         /**
             * Method to get metadata of the group.
-            * @returns {string}
+            * @returns {Object}
          */
-        getMetadata(): string;
+        getMetadata(): Object;
         /**
             * Method to set metadata of the group.
-            * @param {string} metadata
+            * @param {Object} metadata
          */
-        setMetadata(metadata: string): void;
+        setMetadata(metadata: Object): void;
         /**
             * Method to get the created at timestamp of the group.
             * @returns {number}
@@ -3566,14 +3566,14 @@ export class TypingIndicator {
         setReceiverId(receiverId: string): void;
         /**
             * Method to get metadata of the transient message.
-            * @returns {string}
+            * @returns {Object}
          */
-        getMetadata(): string;
+        getMetadata(): Object;
         /**
             * Method to set metadata of the transient message.
-            * @param {string} meta
+            * @param {Object} meta
          */
-        setMetadata(meta: string): void;
+        setMetadata(meta: Object): void;
         /**
             * Method to get sender of the transient message.
             * @returns {User}
