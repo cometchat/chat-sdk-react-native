@@ -233,7 +233,7 @@ export namespace CometChat {
             * @returns {MessageReceipt[]}
             * @memberof CometChat
         */
-        export function getMessageReceipts(messageId: string | any): Promise<Object>;
+        export function getMessageReceipts(messageId: string | any): Promise<MessageReceipt[]>;
         
         /**
             * Function to fetch unread message count.
