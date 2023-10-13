@@ -1,6 +1,6 @@
 {
   "name": "@cometchat/chat-sdk-react-native",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "A complete chat solution.",
   "main": "CometChat.js",
   "scripts": {

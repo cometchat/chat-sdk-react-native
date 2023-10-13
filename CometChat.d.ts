@@ -746,23 +746,59 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function callExtension(slug: string, method: string, endpoint: string, data?: Object): Promise<Object>;
+
+        /**
+            *
+            * Returns a boolean value which indicates if the AI Feature is enabled or not.
+            * @param {string} featureKey
+            * @returns {Promise<boolean>}
+            * @memberof CometChat
+         */
+        export function isAIFeatureEnabled(featureKey: string): Promise<boolean>;
+        
+       
         /**
             * Function to get conversation starter for a particular conversation.
             * @param {string} receiverId
             * @param {string} receiverType
-            * @returns {Promise<Object>}
+            * @param {Object} configuration
+            * @returns {Promise<Array<string>>}
             * @memberof CometChat
-            */
-        export function getConversationStarter(receiverId: string, receiverType: string): Promise<Object>;
+        */
+        export function getConversationStarter(receiverId: string, receiverType: string, configuration?: Object): Promise<Array<string>>;
+        
         /**
-            * Function to get smart reply in a particular conversation.
-            * @param {string} receiverId
-            * @param {string} receiverType
-            * @returns {Promise<Object>}
-            * @memberof CometChat
-            */
-        export function getSmartReply(receiverId: string, receiverType: string): Promise<Object>;
-
+             * Function to get smart replies in a conversation.
+             * @param {string} receiverId
+             * @param {string} receiverType
+             * @param {Object} configuration
+             * @returns {Promise<Object>}
+             * @memberof CometChat
+         */
+        export function getSmartReplies(receiverId: string, receiverType: string, configuration?: Object): Promise<Object>;
+        
+        /**
+             * Function to get assistance from a bot in a particular conversation.
+             * @param {string} receiverId
+             * @param {string} receiverType
+             * @param {string} botUID
+             * @param {string} question
+             * @param {Object} configuration
+             * @returns {Promise<string>}
+             * @memberof CometChat
+         */
+        export function askBot(receiverId: string, receiverType: string, botUID: string, question: string, configuration?: Object): Promise<string>;
+        
+        /**
+             * Function to get summary of a conversation.
+             * @param {string} receiverId
+             * @param {string} receiverType
+             * @param {Object} configuration
+             * @returns {Promise<string>}
+             * @memberof CometChat
+         */
+        export function getConversationSummary(receiverId: string, receiverType: string, configuration?: Object): Promise<string>;
+          
         /**
             * Function to set resource, platform and language variable.
             * @param {string} resource
@@ -772,6 +808,18 @@ export namespace CometChat {
         */
         export function setSource(resource: string, platform: string, language: string): void;
         
+        /**
+            * Function to set demo app details.
+            * @internal
+            * @memberof CometChat
+         */
+        export function setDemoMetaInfo(details: {
+                    name: string;
+                    type: string;
+                    version: string;
+                    platform: string;
+        }): void;
+
         /**
             *
             * Method to connect to WebSocket server.
@@ -1495,6 +1543,7 @@ export const LOCAL_STORE: {
     KEY_APP_SETTINGS: string;
     KEY_APP_ID: string;
     KEY_DEVICE_ID: string;
+    KEY_SESSION_ID: string;
     KEY_MESSAGE_LISTENER_LIST: string;
 };
 export const ResponseConstants: {
@@ -1535,6 +1584,8 @@ export const ResponseConstants: {
         };
         KEY_CONVERSATION_STARTER: string;
         KEY_SMART_REPLIES: string;
+        KEY_CONVERSATION_SUMMARY: string;
+        KEY_BOT_REPLY: string;
     };
 };
 
@@ -2129,6 +2180,23 @@ export const ConversationErrors: {
         details: string;
     };
 };
+
+export const AIFeatureError: {
+    INVALID_AI_FEATURE: {
+        code: string;
+        name: string;
+        message: string;
+        details: {};
+    };
+};
+
+export const AI_FEATURE_ACCESSIBLE = "features.ai.accessible";
+export const AI_FEATURE_ENABLED = "features.ai.enabled";
+export const AI_SLUG_ACCESSIBLE = "features.ai.%s.accessible";
+export const AI_SLUG_ENABLED = "features.ai.%s.enabled";
+
+export declare const validateQuestion: (question: any) => CometChatException;
+
 export const AIErrors: {
     NO_CONVERSATION_STARTER: {
         code: string;
@@ -2137,6 +2205,18 @@ export const AIErrors: {
         details: string;
     };
     NO_SMART_REPLY: {
+        code: string;
+        name: string;
+        message: string;
+        details: string;
+    };
+    NO_CONVERSATION_SUMMARY: {
+        code: string;
+        name: string;
+        message: string;
+        details: string;
+    };
+    NO_ASSISTANCE: {
         code: string;
         name: string;
         message: string;
