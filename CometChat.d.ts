@@ -1,4 +1,477 @@
 import * as React from 'react';
+export namespace CometChatNotifications{
+    /**
+        * Function to get preferences set for the logged-in user.
+        * @returns {Promise<PushPreferences>}
+        * @memberof CometChatNotifications
+     */
+    export function fetchPushPreferences(): Promise<PushPreferences>;
+    /**
+        * Function to update preferences for the logged-in user.
+        * @param {PushPreferences} pushPreferences
+        * @returns {Promise<PushPreferences>}
+        * @memberof CometChatNotifications
+     */
+    export function updatePushPreferences(pushPreferences: PushPreferences): Promise<PushPreferences>;
+    /**
+        * Function to reset preferences for the logged-in user.
+        * @returns {Promise<PushPreferences>}
+        * @memberof CometChatNotifications
+     */
+    export function resetPushPreferences(): Promise<PushPreferences>;
+    /**
+        * Function to register push token for the current authToken of the logged-in user.
+        * @returns {Promise<string>}
+        * @param {string} pushToken
+        * @param {PushPlatforms} platform
+        * @param {string} providerId - Optional, default value is `default`.
+        * @memberof CometChatNotifications
+     */
+    export function registerPushToken(pushToken: string, platform: PushPlatforms, providerId?: string): Promise<string>;
+    /**
+        * Function to unregister push token registered for the current authToken of the logged-in user.
+        * @returns {Promise<string>}
+        * @memberof CometChatNotifications
+     */
+    export function unregisterPushToken(): Promise<string>;
+    /**
+        * Function to mute conversations for the logged-in user.
+        * @returns {Promise<string>}
+        * @param {MutedConversation[]} mutedConversations
+        * @memberof CometChatNotifications
+     */
+    export function muteConversations(mutedConversations: MutedConversation[]): Promise<string>;
+    /**
+        * Function to unmute conversations for the logged-in user.
+        * @returns {Promise<string>}
+        * @param {UnmutedConversation[]} unmutedConversations
+        * @memberof CometChatNotifications
+     */
+    export function unmuteConversations(unmutedConversations: UnmutedConversation[]): Promise<string>;
+    /**
+     * Function to retrieve list of muted conversations for the logged-in user.
+     * @returns {Promise<MutedConversation[]>}
+     * @memberof CometChatNotifications
+    */
+    export function getMutedConversations(): Promise<MutedConversation[]>;
+    export enum MessagesOptions {
+        DONT_SUBSCRIBE,
+        SUBSCRIBE_TO_ALL,
+        SUBSCRIBE_TO_MENTIONS
+    }
+    export enum RepliesOptions {
+        DONT_SUBSCRIBE,
+        SUBSCRIBE_TO_ALL,
+        SUBSCRIBE_TO_MENTIONS
+    }
+    export enum ReactionsOptions {
+        DONT_SUBSCRIBE,
+        SUBSCRIBE_TO_REACTIONS_ON_OWN_MESSAGES,
+        SUBSCRIBE_TO_REACTIONS_ON_ALL_MESSAGES
+    }
+    export enum MemberActionsOptions {
+        DONT_SUBSCRIBE,
+        SUBSCRIBE
+    }
+    export enum DNDOptions {
+        DISABLED,
+        ENABLED
+    }
+    export enum DayOfWeek {
+        MONDAY = "monday",
+        TUESDAY = "tuesday",
+        WEDNESDAY = "wednesday",
+        THURSDAY = "thursday",
+        FRIDAY = "friday",
+        SATURDAY = "saturday",
+        SUNDAY = "sunday"
+    }
+    export enum MutedConversationType {
+        ONE_ON_ONE = "oneOnOne",
+        GROUP = "group"
+    }
+    export enum PushPlatforms {
+        FCM_REACT_NATIVE_ANDROID = "fcm_react_native_android",
+        FCM_REACT_NATIVE_IOS = "fcm_react_native_ios",
+        APNS_REACT_NATIVE_DEVICE = "apns_react_native_device",
+        APNS_REACT_NATIVE_VOIP = "apns_react_native_voip"
+    }
+    export const APIConstants: {
+        KEY_GROUP_PREFERENCES: string;
+        KEY_GROUP_MESSAGES: string;
+        KEY_GROUP_REACTIONS: string;
+        KEY_GROUP_REPLIES: string;
+        KEY_GROUP_MEMBER_ADDED: string;
+        KEY_GROUP_MEMBER_LEFT: string;
+        KEY_GROUP_MEMBER_JOINED: string;
+        KEY_GROUP_MEMBER_KICKED: string;
+        KEY_GROUP_MEMBER_BANNED: string;
+        KEY_GROUP_MEMBER_UNBANNED: string;
+        KEY_GROUP_MEMBER_SCOPE_CHANGED: string;
+        KEY_MUTE_PREFERENCES: string;
+        KEY_MUTE_DND: string;
+        KEY_MUTE_SCHEDULE: string;
+        KEY_ONE_ON_ONE_PREFERENCES: string;
+        KEY_ONE_ON_ONE_MESSAGES: string;
+        KEY_ONE_ON_ONE_REACTIONS: string;
+        KEY_ONE_ON_ONE_REPLIES: string;
+        KEY_USE_PRIVACY_TEMPLATE: string;
+        KEY_PROVIDER_ID: string;
+        KEY_TIMEZONE: string;
+        KEY_PLATFORM: string;
+        KEY_FCM_TOKEN: string;
+        KEY_CONVERSATIONS: string;
+        KEY_GET_PREFERENCES: string;
+        KEY_UPDATE_PREFERENCES: string;
+        KEY_RESET_PREFERENCES: string;
+        KEY_REGISTER_TOKEN: string;
+        KEY_UNREGISTER_TOKEN: string;
+        KEY_MUTE_CONVERSATIONS: string;
+        KEY_UNMUTE_CONVERSATIONS: string;
+        KEY_GET_MUTED_CONVERSATIONS: string;
+        KEY_MUTED_CONVERSATIONS: string;
+        KEY_FROM: string;
+        KEY_TO: string;
+    };
+    export const APIResponseConstants: {
+        TOKEN_REGISTER_SUCCESS: string;
+        TOKEN_REGISTER_ERROR: string;
+        TOKEN_UNREGISTER_SUCCESS: string;
+        TOKEN_UNREGISTER_ERROR: string;
+        MUTE_CONVERSATION_SUCCESS: string;
+        MUTE_CONVERSATION_ERROR: string;
+        UNMUTE_CONVERSATION_SUCCESS: string;
+        UNMUTE_CONVERSATION_ERROR: string;
+    };
+    export const DEFAULT_PROVIDER_ID = "default";
+    
+    export class DaySchedule {
+            constructor(from: number, to: number, dnd: boolean);
+            /**
+                * Get the from value of Day Schedule.
+                * @returns {number}
+             */
+            getFrom(): number;
+            /**
+                * @param {number} from
+                * Set the from value of Day Schedule.
+             */
+            setFrom(from: number): void;
+            /**
+                * Get the to value of Day Schedule.
+                * @returns {number}
+             */
+            getTo(): number;
+            /**
+                * @param {number} to
+                * Set the to value of Day Schedule.
+             */
+            setTo(to: number): void;
+            /**
+                * Get the value of DND of Day Schedule.
+                * @returns {boolean}
+             */
+            getDND(): boolean;
+            /**
+                * @param {boolean} dnd
+                * Set the value of DND of Day Schedule.
+             */
+            setDND(dnd: boolean): void;
+    }
+    
+    /**
+        *
+        * @module GroupPreferences
+        */
+    export class GroupPreferences {
+            /**
+                * Get the messages preferences for groups.
+                * @returns {MessagesOptions}
+             */
+            getMessagesPreference(): MessagesOptions;
+            /**
+                * Get the replies preferences for groups.
+                * @returns {RepliesOptions}
+             */
+            getRepliesPreference(): RepliesOptions;
+            /**
+                * Get the reactions preferences for groups.
+                * @returns {ReactionsOptions}
+             */
+            getReactionsPreference(): ReactionsOptions;
+            /**
+                * Get the member left preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberLeftPreference(): MemberActionsOptions;
+            /**
+                * Get the member added preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberAddedPreference(): MemberActionsOptions;
+            /**
+                * Get the member joined preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberJoinedPreference(): MemberActionsOptions;
+            /**
+                * Get the member kicked preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberKickedPreference(): MemberActionsOptions;
+            /**
+                * Get the member banned preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberBannedPreference(): MemberActionsOptions;
+            /**
+                * Get the member unbanned preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberUnbannedPreference(): MemberActionsOptions;
+            /**
+                * Get the member scope change preferences for groups.
+                * @returns {MemberActionsOptions}
+             */
+            getMemberScopeChangedPreference(): MemberActionsOptions;
+            /**
+             * @param {MessagesOptions} messagesPreference
+             * Set messages preference for groups.
+             */
+            setMessagesPreference(messagesPreference: MessagesOptions): void;
+            /**
+             * @param {RepliesOptions} repliesPreference
+             * Set replies preference for groups.
+             */
+            setRepliesPreference(repliesPreference: RepliesOptions): void;
+            /**
+             * @param {ReactionsOptions} reactionsPreference
+             * Set reactions preference for groups.
+             */
+            setReactionsPreference(reactionsPreference: ReactionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberLeftPreference
+             * Set member left preference for groups.
+             */
+            setMemberLeftPreference(memberLeftPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberAddedPreference
+             * Set member added preference for groups.
+             */
+            setMemberAddedPreference(memberAddedPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberJoinedPreference
+             * Set member joined preference for groups.
+             */
+            setMemberJoinedPreference(memberJoinedPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberKickedPreference
+             * Set member kicked preference for groups.
+             */
+            setMemberKickedPreference(memberKickedPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberBannedPreference
+             * Set member banned preference for groups.
+             */
+            setMemberBannedPreference(memberBannedPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberUnbannedPreference
+             * Set member unbanned preference for groups.
+             */
+            setMemberUnbannedPreference(memberUnbannedPreference: MemberActionsOptions): void;
+            /**
+             * @param {MemberActionsOptions} memberScopeChangedPreference
+             * Set member scope change preference for groups.
+             */
+            setMemberScopeChangedPreference(memberScopeChangedPreference: MemberActionsOptions): void;
+            /**
+                * @param {Object} jsonData
+                * Convert JSON object to GroupPreferences.
+            */
+            static fromJSON(jsonData: Object): GroupPreferences;
+    }
+    
+    export class MutedConversation {
+            /**
+                * Get the id of muted conversation
+                * @returns {string}
+                */
+            getId(): string;
+            /**
+                * Set the id of muted conversation
+                * @param {string} id
+                */
+            setId(id: string): void;
+            /**
+                * Get the conversation type of muted conversation.
+                * @returns {ConversationsType}
+                */
+            getType(): ConversationsType;
+            /**
+                * Set the conversation type of muted conversation.
+                * @param {ConversationsType} type
+                */
+            setType(type: ConversationsType): void;
+            /**
+                * Get the date until which the conversation should be muted.
+                * @returns {number}
+                */
+            getUntil(): number;
+            /**
+                * Set the date until which the conversation should be muted.
+                * @param {number} until
+                */
+            setUntil(until: number): void;
+    }
+    
+    export class MutePreferences {
+            /**
+                * Get the DND preferences.
+                * @returns {DNDOptions}
+                */
+            getDNDPreference(): DNDOptions;
+            /**
+                * @param {DNDOptions} dndPreferences
+                * Set DND preferences.
+                */
+            setDNDPreference(dndPreferences: DNDOptions): void;
+            /**
+                * Get the schedule preferences.
+                * @returns {Map<DayOfWeek, DaySchedule>}
+                */
+            getSchedulePreference(): Map<DayOfWeek, DaySchedule>;
+            /**
+                * @param {Map<DayOfWeek, DaySchedule>} schedule
+                * Set the schedule preferences.
+                */
+            setSchedulePreference(schedule: Map<DayOfWeek, DaySchedule>): void;
+            /**
+                * Get the schedule for a day.
+                * @returns {DaySchedule}
+                */
+            getScheduleFor(day: DayOfWeek): DaySchedule;
+            /**
+                * @param {DayOfWeek} day
+                * @param {DaySchedule} schedule
+                * Set the schedule for a day.
+                */
+            setScheduleFor(day: DayOfWeek, schedule: DaySchedule): void;
+            /**
+                * @param {Object} jsonData
+                * Convert JSON object to MutePreferences.
+             */
+            static fromJSON(jsonData: Object): MutePreferences;
+    }
+    
+    export class OneOnOnePreferences {
+            /**
+                * Get the reactions preferences for groups.
+                * @returns {ReactionsOptions}
+             */
+            getReactionsPreference(): ReactionsOptions;
+            /**
+                * @param {ReactionsOptions} reactionsPreference
+                * Set reactions preference for groups.
+             */
+            setReactionsPreference(reactionsPreference: ReactionsOptions): void;
+            /**
+                * Get the replies preferences for groups.
+                * @returns {RepliesOptions}
+             */
+            getRepliesPreference(): RepliesOptions;
+            /**
+                * @param {RepliesOptions} repliesPreference
+                * Set replies preference for groups.
+             */
+            setRepliesPreference(repliesPreference: RepliesOptions): void;
+            /**
+                * Get the messages preferences for groups.
+                * @returns {MessagesOptions}
+             */
+            getMessagesPreference(): MessagesOptions;
+            /**
+                * @param {MessagesOptions} messagesPreference
+                * Set messages preference for groups.
+             */
+            setMessagesPreference(messagesPreference: MessagesOptions): void;
+            /**
+                * @param {Object} jsonData
+                * Convert JSON object to OneOnOnePreferences.
+             */
+            static fromJSON(jsonData: Object): OneOnOnePreferences;
+    }
+    
+    export class PushPreferences {
+            /**
+                * Get the OneOnOne preferences.
+                * @returns {OneOnOnePreferences}
+             */
+            getOneOnOnePreferences(): OneOnOnePreferences;
+            /**
+                * @param {OneOnOnePreferences} oneOnOnePreferences
+                * Set the OneOnOne preferences.
+             */
+            setOneOnOnePreferences(oneOnOnePreferences: OneOnOnePreferences): void;
+            /**
+                * Get the Muted preferences.
+                * @returns {MutePreferences}
+             */
+            getMutePreferences(): MutePreferences;
+            /**
+                * @param {MutePreferences} mutePreferences
+                * Set the Mute preferences.
+             */
+            setMutePreferences(mutePreferences: MutePreferences): void;
+            /**
+                * Get the Group preferences.
+                * @returns {GroupPreferences}
+             */
+            getGroupPreferences(): GroupPreferences;
+            /**
+                * @param {GroupPreferences} groupPreferences
+                * Set the Group preferences.
+             */
+            setGroupPreferences(groupPreferences: GroupPreferences): void;
+            /**
+                * Returns whether to use privacy template or not.
+                * @returns {boolean}
+             */
+            getUsePrivacyTemplate(): boolean;
+            /**
+                * @param {boolean} usePrivacyTemplate
+                * Set whether to use privacy template or not.
+             */
+            setUsePrivacyTemplate(usePrivacyTemplate: boolean): void;
+            /**
+                * @param {Object} jsonData
+                * Convert JSON object to PushPreferences.
+             */
+            static fromJSON(jsonData: Object): PushPreferences;
+    }
+    
+    export class UnmutedConversation {
+            /**
+                * Get the id of unmuted conversation
+                * @returns {string}
+                */
+            getId(): string;
+            /**
+                * Set the id of unmuted conversation
+                * @param {string} id
+                */
+            setId(id: string): void;
+            /**
+                * Get the conversation type of unmuted conversation.
+                * @returns {ConversationsType}
+                */
+            getType(): ConversationsType;
+            /**
+                * Set the conversation type of unmuted conversation.
+                * @param {ConversationsType} type
+                */
+            setType(type: ConversationsType): void;
+    }
+}
 export namespace CometChat {
         let USER_STATUS: {
                 ONLINE: string;
@@ -594,6 +1067,13 @@ export namespace CometChat {
         */
         export function rejectCall(sessionId: string, status: any): Promise<Call>;
         
+        /**
+            * Function to clear active call.
+            * @memberof CometChat
+        */
+        export function clearActiveCall(): void;
+      
+
         /**
             * Function to end an ongoing call.
             * @param {string} sessionid
