@@ -3362,6 +3362,14 @@ export class MessageListener {
                  * This event is triggered when a reaction is removed.
          */
         onMessageReactionRemoved?: Function;
+        /**
+         * This event is triggered when a message is delivered to all members in a group.
+        */
+        onMessagesDeliveredToAll?: Function;
+        /**
+         * This event is triggered when a message is read by all members in a group.
+        */
+        onMessagesReadByAll?: Function;
         constructor(...args: any[]);
 }
 
@@ -5820,8 +5828,10 @@ export interface ErrorModel {
  */
 export class MessageReceipt {
         RECEIPT_TYPE: {
-                READ_RECEIPT: string;
-                DELIVERY_RECEIPT: string;
+            READ_RECEIPT: string;
+            DELIVERY_RECEIPT: string;
+            READ_BY_ALL_RECEIPT: string;
+            DELIVERED_TO_ALL_RECEIPT: string;
         };
         /**
             * Method to get receiver type of the message receipt.
