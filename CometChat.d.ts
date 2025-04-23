@@ -2413,6 +2413,11 @@ export const MessageConstatnts: {
             MENTIONS_WITH_TAG_INFO: string;
             MENTIONS_WITH_BLOCKED_INFO: string;
             ONLY_INTERACTION_GOAL_COMPLETED: string;
+            HAS_ATTACHMENTS: string;
+            HAS_LINKS: string;
+            HAS_MENTIONS: string;
+            HAS_REACTIONS: string;
+            MENTIONED_UIDS: string;
         };
     };
 };
@@ -4396,6 +4401,17 @@ export class ConversationsRequest {
             * @returns {String[]}
         */
         getUserTags(): String[];
+        /**
+            * Method to get the search string based on which the conversations will be fetched.
+            * @returns {string}
+         */
+        getSearchKeyword(): string;
+        /**
+            * Determines whether only unread conversations should be fetched.
+            *
+            * @returns {boolean}
+         */
+        getUnread(): boolean;
 }
 export class ConversationsRequestBuilder {
         /** @private */ conversationType: string;
@@ -4407,6 +4423,8 @@ export class ConversationsRequestBuilder {
         /** @private */ userTags: Array<String>;
         /** @private */ IncludeBlockedUsers: boolean;
         /** @private */ WithBlockedInfo: boolean;
+        /** @private */ searchKeyword: string;
+        /** @private */ unreadOnly: boolean;
         /**
             *
             * @param {number} limit
@@ -4421,6 +4439,14 @@ export class ConversationsRequestBuilder {
             * @returns
          */
         setConversationType(conversationType: string): this;
+        /**
+            *
+            * @param {string} searchKeyword
+            * Method to set the search string based on which the conversations will be fetched.
+            * This string will be searched in the `conversationWith` property.
+            * @returns
+         */
+        setSearchKeyword(searchKeyword: string): this;
         /**
             *
             * @param {boolean} getUserAndGroupTags
@@ -4482,6 +4508,12 @@ export class ConversationsRequestBuilder {
             * @returns
         */
         public withBlockedInfo(_withBlockedInfo: boolean): this;
+         /**
+            * A method to fetch unread conversations.
+            * @param {boolean} unread
+            * @returns
+         */
+         setUnread(unread: boolean): this;
         /**
             * This method will return an object of the ConversationsRequest class.
             * @returns {ConversationsRequest}
@@ -4597,6 +4629,36 @@ export class MessagesRequest {
             */
         isHideDeletedMessages(): boolean;
         /**
+            * Gets the flag indicating whether to only fetch messages which have attachments.
+            *
+            * @return {boolean}
+            */
+        getHasAttachments(): boolean;
+        /**
+            * Method to only fetch messages which have links.
+            *
+            * @return {boolean}
+            */
+        getHasLinks(): boolean;
+        /**
+         * Method to only fetch messages which have mentions.
+         *
+         * @return {boolean}
+         */
+        getHasMentions(): boolean;
+        /**
+         * Method to only fetch messages which have reactions.
+         *
+         * @return {boolean}
+         */
+        getHasReactions(): boolean;
+        /**
+         * Method to only fetch messages which have the given mentioned UIDs.
+         *
+         * @return {String[]}
+         */
+        getMentionedUIDs(): String[];
+        /**
             * Gets the list of tags for which the messages are to be fetched.
             *
             * @return {String[]}
@@ -4660,7 +4722,12 @@ export class MessagesRequestBuilder {
         /** @private */ WithTags?: boolean;
         /** @private */ interactionGoalCompletedOnly?: boolean;
         /** @private */ mentionsWithUserTags?: boolean;
-        /** @private */ mentionsWithBlockedRelation?: boolean;        
+        /** @private */ mentionsWithBlockedRelation?: boolean; 
+        /** @private */ HasAttachments?: boolean;
+        /** @private */ HasLinks?: boolean;
+        /** @private */ HasMentions?: boolean;
+        /** @private */ HasReactions?: boolean;
+        /** @private */ mentionedUIDs?: Array<String>;         
         /**
             * A method to set limit for the number of messages returned in a single iteration. A maximum of 100 messages can fetched in a single iteration.
             * @param {number} limit
@@ -4763,6 +4830,36 @@ export class MessagesRequestBuilder {
             * @returns
          */
         hideDeletedMessages(hideDeletedMessages: boolean): this;
+        /**
+            * Method to only fetch messages which have attachments.
+            * @param {boolean} hasAttachments
+            * @returns
+         */
+        hasAttachments(hasAttachments: boolean): this;
+        /**
+            * Method to only fetch messages which have links.
+            * @param {boolean} hasLinks
+            * @returns
+         */
+        hasLinks(hasLinks: boolean): this;
+        /**
+            * Method to only fetch messages which have mentions.
+            * @param {boolean} hasMentions
+            * @returns
+         */
+        hasMentions(hasMentions: boolean): this; this;
+        /**
+            *Method to only fetch messages which have reactions.
+            * @param {boolean} hasReactions
+            * @returns
+         */
+        hasReactions(hasReactions: boolean): this;
+        /**
+            * Method to only fetch messages which have the given mentioned UIDs.
+            * @param {Array<String>} mentionedUIDs
+            * @returns
+         */
+        setMentionedUIDs(mentionedUIDs: Array<String>): this;
         /**
          * A method to set parameter to get the messages belonging to specific tags.
          * @param {Array<String>} tags 
