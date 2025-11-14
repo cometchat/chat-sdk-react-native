@@ -2258,6 +2258,13 @@ export class MediaMessage extends BaseMessage implements Message {
           * Set the tags for the message.
           */
         setTags(tags: Array<String>): void;
+        /**
+            * Gets the moderation status of the message.
+            * @description If the message is not moderated, it returns "unmoderated".
+            * If the message is moderated, it returns the status of the moderation.
+            * @returns {string}
+         */
+        getModerationStatus(): string;
 }
 
 /**
@@ -2649,6 +2656,13 @@ export class TextMessage extends BaseMessage implements Message {
           * Set the tags for the message.
           */
         setTags(tags: Array<String>): void;
+        /**
+            * Gets the moderation status of the message.
+            * @description If the message is not moderated, it returns "unmoderated".
+            * If the message is moderated, it returns the status of the moderation.
+            * @returns {string}
+         */
+        getModerationStatus(): string;
 }
 
 export const constants: {
@@ -3894,6 +3908,10 @@ export class MessageListener {
          * This event is triggered when a message is read by all members in a group.
         */
         onMessagesReadByAll?: Function;
+        /**
+            * This event is triggered when a message is moderated.
+         */
+        onMessageModerated?: Function;
         /**
          * This event is triggered when an AI tool result is received.
         */
