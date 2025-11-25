@@ -1967,6 +1967,24 @@ export namespace CometChat {
         export function getConversationUpdateSettings(): Promise<ConversationUpdateSettings>;
 
 
+
+        /**
+         * Function to get flag reasons.
+         * @returns {Promise<FlagReason[]>}
+         * @memberof CometChat
+         */
+        export function getFlagReasons(): Promise<FlagReason[]>;
+
+        /**
+         * Function to flag a message.
+         * @param {string} messageId
+         * @param {object} payload
+         * @returns {Promise<FlagMessageResponse>}
+         * @memberof CometChat
+         */
+        export function flagMessage(messageId: string, payload: { reasonId: string; remark?: string }): Promise<FlagMessageResponse>;
+
+
 /**
   *
   * @enum GoalType
@@ -5839,6 +5857,21 @@ export class ConversationUpdateSettings {
     shouldUpdateOnMessageReplies(): boolean;
     static fromJSON(jsonData: Object): ConversationUpdateSettings;
 }
+
+export interface FlagReason {
+  id: string;
+  name: string;
+  description: string;
+  default?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FlagMessageResponse {
+  success: boolean;
+  message: string;
+}
+
 export class AppSettingsBuilder {
         /** @private */
         subscriptionType: string;
