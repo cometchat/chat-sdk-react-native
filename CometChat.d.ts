@@ -2329,6 +2329,8 @@ export class BaseMessage implements Message {
         protected unreadRepliesCount: number;
         protected mentionedUsers?: User[];
         protected mentionedMe?: boolean;
+        protected quotedMessageId?: number;
+        protected quotedMessage?: BaseMessage;
         constructor(receiverId: string, messageType: string, receiverType: string, category: MessageCategory);
         /**
         * Get unread replies count of the message
@@ -2594,6 +2596,26 @@ export class BaseMessage implements Message {
             * @returns {ReactionCount[]}
             */
         getReactions(): ReactionCount[];
+         /**
+         * Get quoted message ID of the message.
+         * @returns {number}
+        */
+        getQuotedMessageId(): number;
+        /**
+         * @param {number} value
+         * Set quoted message ID of the message.
+        */
+        setQuotedMessageId(value: number): void;
+        /**
+         * Get quoted message of the message.
+         * @returns {BaseMessage}
+        */
+        getQuotedMessage(): BaseMessage;
+        /**
+         * @param {BaseMessage} value
+         * Set quoted message of the message.
+        */
+        setQuotedMessage(value: BaseMessage): void;
 }
 
 /**
@@ -2950,6 +2972,7 @@ export const MessageConstatnts: {
             HAS_REACTIONS: string;
             MENTIONED_UIDS: string;
             ATTACHMENT_TYPES: string;
+            HIDE_QUOTED_MESSAGES: string;
             WITH_PARENT: string;
         };
     };
@@ -5288,6 +5311,12 @@ export class MessagesRequest {
          */
         isWithParent(): boolean;
         /**
+            * Gets the flag indicating whether to hide quoted messages when fetching messages.
+            *
+            * @return {boolean}
+        */
+        isHideQuotedMessages(): boolean;
+        /**
             * Get list of next messages based on the parameters specified in MessagesRequestBuilder class. The Developer need to call this method repeatedly using the same object of MessagesRequest class to get paginated list of message.
             * @returns {Promise<BaseMessage[] | []>}
         */
@@ -5327,6 +5356,7 @@ export class MessagesRequestBuilder {
         /** @private */ HasMentions?: boolean;
         /** @private */ HasReactions?: boolean;
         /** @private */ mentionedUIDs?: Array<String>;      
+        /** @private */ HideQuotedMessages?: boolean;   
         /** @private */ attachmentTypes?: Array<AttachmentType>; 
         /** @private */ WithParent?: boolean;  
         /**
@@ -5497,6 +5527,12 @@ export class MessagesRequestBuilder {
             * @returns
          */
         setAttachmentTypes(attachmentTypes: Array<AttachmentType>): this;
+         /**
+            * A method to hide quoted messages.
+            * @param {boolean} hideQuotedMessages
+            * @returns
+         */
+        hideQuotedMessages(hideQuotedMessages: boolean): this;
         /**
             * This method will return an object of the MessagesRequest class.
             * @returns {MessagesRequest}
