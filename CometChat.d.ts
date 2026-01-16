@@ -1266,6 +1266,25 @@ export namespace CometChat {
         export function markAsDelivered(...args: any): any;
 
         /**
+         * Mark entire conversation as read for a user or group.
+         * @param {string} conversationWith - User ID or Group ID
+         * @param {string} conversationType - Conversation type (user or group)
+         * @returns {Promise<string>}
+         * @memberof CometChat
+        */
+        export function markConversationAsRead(conversationWith: string, conversationType: string): Promise<string>;
+
+        /**
+         * Mark entire conversation as delivered for a user or group.
+         * @param {string} conversationWith - User ID or Group ID
+         * @param {string} conversationType - Receiver type (user or group)
+         * @returns {Promise<string>}
+         * @memberof CometChat
+        */
+        export function markConversationAsDelivered(conversationWith: string, conversationType: string): Promise<string>;
+
+        /**
+            * @deprecated Please use markMessageAsUnread() instead.
             * Mark all the messages after the specified message id as unread.
             * @param {TextMessage | MediaMessage | CustomMessage | BaseMessage | any} message
             * @returns {Promise<string>}
@@ -1273,6 +1292,13 @@ export namespace CometChat {
          **/
         export function markAsUnread(message: TextMessage | MediaMessage | CustomMessage | any): Promise<string | CometChatException>;
         
+        /**
+            * Mark all the messages after the specified message id as unread.
+            * @param {TextMessage | MediaMessage | CustomMessage | BaseMessage | any} message
+            * @returns {Promise<string>}
+            * @memberof CometChat
+        */
+        export function markMessageAsUnread(message: TextMessage | MediaMessage | CustomMessage | any): Promise<Conversation>;
         /**
             * Send a transient message.
             * @param {string} uid
