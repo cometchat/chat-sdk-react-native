@@ -4580,6 +4580,12 @@ export class GroupsRequest {
             * @return {boolean}
             */
         isWithTags(): boolean;
+        /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
 }
 export class GroupsRequestBuilder {
         /** @private */ limit: number;
@@ -4587,6 +4593,7 @@ export class GroupsRequestBuilder {
         /** @private */ hasJoined: boolean;
         /** @private */ tags: Array<String>;
         /** @private */ showTags: boolean;
+        /** @private */ page: number;
         /**
             *
             * @param {number} limit
@@ -4621,6 +4628,13 @@ export class GroupsRequestBuilder {
             * @returns
          */
         withTags(withTags: boolean): this;
+         /**
+            *
+            * @param {number} page
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @returns
+         */
+        setPage(page: number): this;
         /**
             * This method will return an object of the GroupsRequest class.
             * @returns {GroupsRequest}
@@ -4630,6 +4644,10 @@ export class GroupsRequestBuilder {
 
 
 export class GroupMembersRequest {
+    static USER_STATUS: {
+        ONLINE: string;
+        OFFLINE: string;
+    };
         constructor(builder: GroupMembersRequestBuilder);
         /**
             * Get list of next set of group members based on the parameters specified in GroupMembersRequestBuilder class. The Developer need to call this method repeatedly using the same object of GroupMembersRequest class to get paginated list of group members.
@@ -4661,12 +4679,26 @@ export class GroupMembersRequest {
             * @return {String[]}
             */
         getScopes(): String[];
+        /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
+          /**
+            * Gets the status filter used to fetch members based on their online or offline status.
+            *
+            * @return {string}
+        */
+        getStatus(): string;
 }
 export class GroupMembersRequestBuilder {
         /** @private */ limit: number;
         /** @private */ searchKeyword: string;
         /** @private */ guid: string;
         /** @private */ scopes?: Array<String>;
+         /** @private */ page: number;
+        /** @private */ status: string;
         constructor(guid: string);
         /**
             *
@@ -4697,10 +4729,24 @@ export class GroupMembersRequestBuilder {
          */
         setScopes(scopes: Array<String>): this;
         /**
+            *
+            * @param {number} page
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @returns
+         */
+        setPage(page: number): this;
+           /**
+            * A method to get the members belonging to a specific status.
+            * @param {string} status
+            * @returns
+         */
+        setStatus(status: string): this;
+        /**
             * This method will return an object of the GroupMembersRequest class.
             * @returns {GroupMembersRequest}
          */
         build(): GroupMembersRequest;
+        
 }
 
 export class BannedMembersRequest {
@@ -4735,12 +4781,20 @@ export class BannedMembersRequest {
         * @return {String[]}
         */
         getScopes(): String[];
+         /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
+       
 }
 export class BannedMembersRequestBuilder {
         /** @private */ limit: number;
         /** @private */ searchKeyword: string;
         /** @private */ guid: string;
         /** @private */ scopes?: Array<String>;
+        /** @private */ page: number;
         constructor(guid: string);
          /**
             * Set the unique identifier of the group.
@@ -4770,12 +4824,19 @@ export class BannedMembersRequestBuilder {
             * @returns
          */
         setScopes(scopes: Array<String>): this;
+         /**
+            *
+            * @param {number} page
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @returns
+         */
+        setPage(page: number): this;
         /**
             * This method will return an object of the BannedMembersRequest class.
             * @returns {BannedMembersRequest}
          */
         build(): BannedMembersRequest;
-}
+}   
 export class UsersRequest {
         static USER_STATUS: {
                 ONLINE: string;
@@ -4866,6 +4927,12 @@ export class UsersRequest {
             * @return {string}
             */
         getSortOrder(): string;
+         /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
         /**
             * Get list of next set of users based on the parameters specified in UsersRequestBuilder class The Developer need to call this method repeatedly using the same object of UsersRequestBuilder class to get paginated list of users.
             * @returns {Promise<User[] | []>}
@@ -4886,6 +4953,7 @@ export class UsersRequestBuilder {
         /** @private */ SortBy: string;
         /** @private */ SortOrder: string;
         /** @private */ SearchIn: Array<String>;
+        /** @private */ page: number;
         /**
             * A method to set limit for the number of Users returned in a single iteration. A maximum of 100 users can fetched in a single iteration.
             * @param {number} limit
@@ -4972,6 +5040,12 @@ export class UsersRequestBuilder {
         */
         public searchIn(searchIn: Array<String>): this;
         /**
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @param {number} page
+            * @returns
+         */
+        setPage(page: number): this;
+        /**
             * This method will return an object of the UsersRequest class.
             * @returns {UsersRequest}
          */
@@ -5046,11 +5120,30 @@ export class ConversationsRequest {
          */
         getSearchKeyword(): string;
         /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
+        
+        /**
             * Determines whether only unread conversations should be fetched.
             *
             * @returns {boolean}
          */
         getUnread(): boolean;
+        /**
+            * Determines whether agentic conversations should be hidden.
+            *
+            * @returns {boolean}
+         */
+        getHideAgentic(): boolean;
+        /**
+            * Determines whether only agentic conversations should be fetched.
+            *
+            * @returns {boolean}
+         */
+        getOnlyAgentic(): boolean;
 }
 export class ConversationsRequestBuilder {
         /** @private */ conversationType: string;
@@ -5064,6 +5157,9 @@ export class ConversationsRequestBuilder {
         /** @private */ WithBlockedInfo: boolean;
         /** @private */ searchKeyword: string;
         /** @private */ unreadOnly: boolean;
+        /** @private */ hideAgentic: boolean;
+        /** @private */ onlyAgentic: boolean;
+         /** @private */ page: number;
         /**
             *
             * @param {number} limit
@@ -5153,6 +5249,24 @@ export class ConversationsRequestBuilder {
             * @returns
          */
          setUnread(unread: boolean): this;
+          /**
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @param {number} page
+            * @returns
+         */
+        setPage(page: number): this;
+        /**
+            * A method to hide agentic conversations from the list.
+            * @param {boolean} hideAgentic
+            * @returns
+         */
+        setHideAgentic(hideAgentic: boolean): this;
+        /**
+            * A method to fetch only agentic conversations.
+            * @param {boolean} onlyAgentic
+            * @returns
+         */
+        setOnlyAgentic(onlyAgentic: boolean): this;
         /**
             * This method will return an object of the ConversationsRequest class.
             * @returns {ConversationsRequest}
@@ -5802,6 +5916,12 @@ export class BlockedUsersRequest {
             * @return {string}
             */
         getSearchKeyword(): string;
+         /**
+            * Get the current page number that the request is on.
+            *
+            * @return {number}
+            */
+        getPage(): number;
         /** @internal */
         getNextData(): any;
 }
@@ -5809,6 +5929,7 @@ export class BlockedUsersRequestBuilder {
         /** @private */ limit: number;
         /** @private */ searchKeyword: string;
         /** @private */ direction: string;
+        /** @private */ page: number;
         /**
             *
             * @param {number} limit
@@ -5830,6 +5951,13 @@ export class BlockedUsersRequestBuilder {
             * @returns
          */
         setDirection(direction: string): this;
+        /**
+            *
+            * @param {number} page
+            * A method to set the page number to start fetching from. Page 0 will fetch the first page.
+            * @returns
+         */
+        setPage(page: number): this;
         /** @internal */
         blockedByMe(): this;
         /** @internal */
