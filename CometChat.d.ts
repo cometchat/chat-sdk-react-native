@@ -1645,7 +1645,7 @@ export namespace CometChat {
             * @returns {Promise<Call>}
             * @memberof CometChat
         */
-        export function initiateCall(call: Call | any): Promise<Call>;
+        export function initiateCall(call: Call | any, timeout?: number): Promise<Call>;
         
         /**
             * Function to accept an incoming user/group call.
