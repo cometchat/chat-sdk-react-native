@@ -2009,6 +2009,18 @@ export namespace CometChat {
          * @memberof CometChat
          */
         export function flagMessage(messageId: string, payload: { reasonId: string; remark?: string }): Promise<FlagMessageResponse>;
+        // Notification Feed Methods
+        export function addNotificationFeedListener(name: string, notificationFeedListener: NotificationFeedListener): void;
+        export function removeNotificationFeedListener(name: string): void;
+        export function markFeedItemAsDelivered(feedItem: NotificationFeedItem): Promise<void>;
+        export function markFeedItemsAsDelivered(feedItems: NotificationFeedItem[]): Promise<void>;
+        export function markFeedItemAsRead(feedItem: NotificationFeedItem): Promise<void>;
+        export function reportFeedEngagement(feedItem: NotificationFeedItem, interactionString: string): Promise<void>;
+        export function getNotificationFeedUnreadCount(): Promise<{ count: number }>;
+        export function getNotificationFeedItem(id: string): Promise<NotificationFeedItem>;
+        export function markPushNotificationDelivered(pushNotification: PushNotification): Promise<void>;
+        export function markPushNotificationClicked(pushNotification: PushNotification): Promise<void>;
+
 
 
 /**
@@ -7600,6 +7612,99 @@ export class ReactionsRequestBuilder {
         * @returns {ReactionsRequest}
         */
     build(): ReactionsRequest;
+}
+
+
+export enum FeedReadState {
+    READ = "read",
+    UNREAD = "unread",
+    ALL = "all",
+}
+
+export class NotificationFeedItem {
+    static fromJSON(json: any): NotificationFeedItem;
+    getId(): string;
+    setId(id: string): void;
+    getCategory(): string;
+    setCategory(category: string): void;
+    getContent(): object;
+    setContent(content: object): void;
+    getReadAt(): number | null;
+    setReadAt(readAt: number | null): void;
+    getDeliveredAt(): number | null;
+    setDeliveredAt(deliveredAt: number | null): void;
+    getSentAt(): number;
+    setSentAt(sentAt: number): void;
+    getMetadata(): Record<string, any>;
+    setMetadata(metadata: Record<string, any>): void;
+    getTags(): string[];
+    setTags(tags: string[]): void;
+    getSender(): string;
+    setSender(sender: string): void;
+    getReceiver(): string;
+    setReceiver(receiver: string): void;
+    getReceiverType(): string;
+    setReceiverType(receiverType: string): void;
+    getIsRead(): boolean;
+}
+
+export class NotificationCategory {
+    static fromJSON(json: any): NotificationCategory;
+    getId(): string;
+    setId(id: string): void;
+    getLabel(): string;
+    setLabel(label: string): void;
+}
+
+export class PushNotification {
+    constructor(pushJson?: Record<string, any>);
+    getId(): string;
+    setId(id: string): void;
+    getAnnouncementId(): string;
+    setAnnouncementId(announcementId: string): void;
+    getCampaignId(): string | null;
+    setCampaignId(campaignId: string | null): void;
+    getSource(): string;
+    setSource(source: string): void;
+}
+
+export class NotificationFeedListener {
+    onFeedItemReceived?: (feedItem: NotificationFeedItem) => void;
+    constructor(options: { onFeedItemReceived?: (feedItem: NotificationFeedItem) => void });
+}
+
+export class NotificationFeedRequest {
+    constructor(builder?: NotificationFeedRequestBuilder);
+    getLimit(): number;
+    getReadState(): FeedReadState;
+    getCategory(): string | null;
+    getChannelId(): string | null;
+    getTags(): string[] | null;
+    getDateFrom(): string | null;
+    getDateTo(): string | null;
+    fetchNext(): Promise<NotificationFeedItem[]>;
+}
+
+export class NotificationFeedRequestBuilder {
+    setLimit(limit: number): this;
+    setReadState(state: FeedReadState): this;
+    setCategory(category: string): this;
+    setChannelId(channelId: string): this;
+    setTags(tags: string[]): this;
+    setDateFrom(date: string): this;
+    setDateTo(date: string): this;
+    build(): NotificationFeedRequest;
+}
+
+export class NotificationCategoriesRequest {
+    constructor(builder?: NotificationCategoriesRequestBuilder);
+    getLimit(): number;
+    fetchNext(): Promise<NotificationCategory[]>;
+}
+
+export class NotificationCategoriesRequestBuilder {
+    setLimit(limit: number): this;
+    build(): NotificationCategoriesRequest;
 }
 
 }
