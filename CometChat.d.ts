@@ -1146,6 +1146,15 @@ export namespace CometChat {
         export function init(appId: any, appSettings: AppSettings): Promise<boolean>;
         
         /**
+            * Initialize CometChat from a cometchat-settings.json object.
+            * Used for file-based integration via AI agent skills.
+            * @param {CometChatSettings} settings
+            * @returns {Promise<boolean>}
+            * @memberof CometChat
+        */
+        export function initFromSettings(settings: CometChatSettings): Promise<boolean>;
+        
+        /**
             * Function to check whether CometChat class initialized before.
             * @returns {boolean}
             * @memberof CometChat
@@ -5979,6 +5988,25 @@ export class BlockedUsersRequestBuilder {
             * @returns {BlockedUsersRequest}
          */
         build(): BlockedUsersRequest;
+}
+
+export interface CometChatSettings {
+        appId: string;
+        region: string;
+        credentials?: {
+                authKey?: string;
+        };
+        chatSDK?: {
+                presenceSubscription?: {
+                        type?: string;
+                        roles?: string[];
+                };
+                autoEstablishSocketConnection?: boolean;
+                adminHost?: string | null;
+                clientHost?: string | null;
+        };
+        callsSDK?: Record<string, unknown>;
+        uiKit?: Record<string, unknown>;
 }
 
 export class AppSettings {
