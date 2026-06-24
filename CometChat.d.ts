@@ -110,6 +110,51 @@ export namespace CometChat {
     }
     export class AIAssistantToolResultEvent extends AIAssistantBaseEvent<AssistantToolResultEventData> {}
 
+    export interface AssistantCardStartedEventData extends AssistantBaseEventData {
+        cardId: string;
+        executionText: string;
+        streamMessageId: string;
+        [key: string]: any;
+    }
+    export class AIAssistantCardStartedEvent extends AIAssistantBaseEvent<AssistantCardStartedEventData> {
+        constructor(conversationId: string, messageId: string, parentId: string, data: AssistantCardStartedEventData);
+        getCardId(): string;
+        setCardId(cardId: string): void;
+        getExecutionText(): string;
+        setExecutionText(executionText: string): void;
+        getStreamMessageId(): string;
+        setStreamMessageId(streamMessageId: string): void;
+    }
+
+    export interface AssistantCardReceivedEventData extends AssistantBaseEventData {
+        cardId: string;
+        card: object;
+        streamMessageId: string;
+        [key: string]: any;
+    }
+    export class AIAssistantCardReceivedEvent extends AIAssistantBaseEvent<AssistantCardReceivedEventData> {
+        constructor(conversationId: string, messageId: string, parentId: string, data: AssistantCardReceivedEventData);
+        getCardId(): string;
+        setCardId(cardId: string): void;
+        getCard(): object;
+        setCard(card: object): void;
+        getStreamMessageId(): string;
+        setStreamMessageId(streamMessageId: string): void;
+    }
+
+    export interface AssistantCardEndedEventData extends AssistantBaseEventData {
+        cardId: string;
+        streamMessageId: string;
+        [key: string]: any;
+    }
+    export class AIAssistantCardEndedEvent extends AIAssistantBaseEvent<AssistantCardEndedEventData> {
+        constructor(conversationId: string, messageId: string, parentId: string, data: AssistantCardEndedEventData);
+        getCardId(): string;
+        setCardId(cardId: string): void;
+        getStreamMessageId(): string;
+        setStreamMessageId(streamMessageId: string): void;
+    }
+
     /**
       *
       * @module AIAssistantMessage
@@ -165,6 +210,57 @@ export namespace CometChat {
             * Set the tags for the message.
             */
         setTags(tags: Array<String>): void;
+        /**
+            * Get the ordered elements list (data.elements).
+            * Returns null when absent (older messages without elements).
+            * @returns {AIAssistantElement[] | null}
+            */
+        getElements(): AIAssistantElement[] | null;
+        /**
+            * Set the ordered elements list.
+            * Called by the factory/deserializer to populate from data.elements.
+            * @param {AIAssistantElement[]} elements
+            */
+        setElements(elements: AIAssistantElement[]): void;
+    }
+
+    /**
+      * @module AIAssistantElement
+      * Represents a single block in the data.elements array of an AIAssistantMessage.
+      */
+    export class AIAssistantElement {
+        constructor(type: string, data: string | object);
+        /**
+            * Get the element's type string ("text", "card", "graph", etc.)
+            * @returns {string}
+            */
+        getType(): string;
+        /**
+            * Get the element's raw body data.
+            * Shape depends on getType():
+            *   "text" → string
+            *   "card" → { card: {...}, cardId: "..." }
+            *   other  → raw JSON value
+            * @returns {string | object}
+            */
+        getData(): string | object;
+    }
+
+    /**
+      * @module CardMessage
+      */
+    export class CardMessage extends BaseMessage implements Message {
+        protected data?: any;
+        constructor(receiverId: string, receiverType: string, type?: string);
+        getCard(): object;
+        setCard(card: object): void;
+        getFallbackText(): string;
+        getText(): string;
+        getTags(): Array<String>;
+        setTags(tags: Array<String>): void;
+        getData(): any;
+        getSender(): User;
+        getReceiver(): User | Group;
     }
 
     /**
@@ -1020,6 +1116,9 @@ export namespace CometChat {
         let AIAssistantToolEndedEvent: typeof AIAssistantToolEndedEvent;
         let AIAssistantToolArgumentEvent: typeof AIAssistantToolArgumentEvent;
         let AIAssistantToolResultEvent: typeof AIAssistantToolResultEvent;
+        let AIAssistantCardStartedEvent: typeof AIAssistantCardStartedEvent;
+        let AIAssistantCardReceivedEvent: typeof AIAssistantCardReceivedEvent;
+        let AIAssistantCardEndedEvent: typeof AIAssistantCardEndedEvent;
         let AI_ASSISTANT_EVENTS: {
                 RUN_STARTED: string;
                 RUN_FINISHED: string;
@@ -1030,8 +1129,13 @@ export namespace CometChat {
                 TOOL_CALL_ENDED: string;
                 TOOL_CALL_RESULT: string;
                 TOOL_CALL_ARGUMENT: string;
+                CARD_START: string;
+                CARD: string;
+                CARD_END: string;
         };
         let AIAssistantMessage: typeof AIAssistantMessage;
+        let AIAssistantElement: typeof AIAssistantElement;
+        let CardMessage: typeof CardMessage;
         let AIToolCall: typeof AIToolCall;
         let AIToolCallFunction: typeof AIToolCallFunction;
         let AIAssistantMessageData: typeof AIAssistantMessageData;
@@ -1061,6 +1165,7 @@ export namespace CometChat {
         let CATEGORY_CALL: string;
         let CATEGORY_CUSTOM: string;
         let CATEGORY_INTERACTIVE: string;
+        let CATEGORY_CARD: string;
         let CATEGORY_AGENTIC: string;
         let ACTION_TYPE: {
                 MEMBER_ADDED: string;
@@ -4012,6 +4117,10 @@ export class MessageListener {
          * This event is triggered when an AI assistant message is received.
         */
         onAIAssistantMessageReceived?: Function;
+        /**
+         * This event is triggered when a card message is received.
+        */
+        onCardMessageReceived?: Function;
         constructor(...args: any[]);
 }
 
