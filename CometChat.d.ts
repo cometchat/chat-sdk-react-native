@@ -524,6 +524,67 @@ export namespace CometChat {
             */
         setTags(tags: Array<String>): void;
     }
+
+    // ── Multiple-attachment upload (SDK design §5) — stateful request object ──
+    interface FileInput {
+        uri: string;
+        name: string;
+        type: string;   // mimeType
+        size: number;
+    }
+
+    interface UploadResult {
+        batchId: string;
+        successful: { fileId: string; attachment: Attachment }[];
+        rejected:   { fileId: string; error: CometChatException }[];
+        failed:     { fileId: string; error: CometChatException }[];
+    }
+
+    enum UploadStatus {
+        IN_PROGRESS = 'in_progress',
+        IDLE = 'idle',
+    }
+
+    interface UploadFileCallbacks {
+        onFileProgress?: (fileId: string, loaded: number, total: number, percent: number) => void;
+        onFileUploaded?: (fileId: string, attachment: Attachment) => void;
+        onFileError?:    (fileId: string, error: CometChatException) => void;   // rejected — not retryable
+        onFileFailure?:  (fileId: string, error: CometChatException) => void;   // transfer failed — retryable
+        onComplete?:     (result: UploadResult) => void;
+    }
+
+    class UploadFileListener {
+        constructor(callbacks?: UploadFileCallbacks);
+        onFileProgress?: (fileId: string, loaded: number, total: number, percent: number) => void;
+        onFileUploaded?: (fileId: string, attachment: Attachment) => void;
+        onFileError?:    (fileId: string, error: CometChatException) => void;
+        onFileFailure?:  (fileId: string, error: CometChatException) => void;
+        onComplete?:     (result: UploadResult) => void;
+    }
+
+    // Not constructible directly — obtain an instance via CometChat.createUploadFileRequest().
+    // `interface` (not `class`) so the type is usable as a return/annotation but `new
+    // CometChat.UploadFileRequest()` is a compile error, matching the runtime (no such static).
+    interface UploadFileRequest {
+        setParentMessageId(messageId: string | number): UploadFileRequest;
+        setBatchId(batchId: string): UploadFileRequest;
+        getBatchId(): string;
+        setConcurrency(count: number): UploadFileRequest;
+        uploadAttachments(files: { fileId: string; file: FileInput }[], listener: UploadFileListener): void;
+        uploadAttachment(fileId: string, file: FileInput, listener: UploadFileListener): void;
+        getAttachment(fileId: string): Attachment | null;
+        getAttachments(): Attachment[];
+        getAttachmentsByType(type: string): Attachment[];
+        getAttachmentCount(): number;
+        getStatus(): UploadStatus;
+        addUploadListener(listener: UploadFileListener): void;
+        removeUploadListener(): void;
+        removeAttachment(fileId: string): void;
+        clearAll(): void;
+    }
+
+    function createUploadFileRequest(receiverId: string, receiverType: string): UploadFileRequest;
+    function getMaxAttachmentCount(): Promise<number>;
 }
 
 export namespace CometChatNotifications{
@@ -1962,7 +2023,7 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function getAppSettings(): Promise<Object>;
-        
+
         /**
             * Returns a boolean value which indicates if a feature is enabled or not for the current plan.
             * @param {string} feature
@@ -6461,6 +6522,16 @@ export class Attachment {
             * @param {string} name
          */
         setUrl(url: string): void;
+        /**
+            * Get metadata of the file (e.g. width, height, duration).
+            * @returns {{ width?: number; height?: number; duration?: number; [key: string]: any } | undefined}
+         */
+        getMetadata(): { width?: number; height?: number; duration?: number; [key: string]: any } | undefined;
+        /**
+            * Set metadata of the file.
+            * @param {{ width?: number; height?: number; duration?: number; [key: string]: any }} metadata
+         */
+        setMetadata(metadata: { width?: number; height?: number; duration?: number; [key: string]: any }): void;
 }
 
 export class CallSettings {
