@@ -562,6 +562,34 @@ export namespace CometChat {
         onComplete?:     (result: UploadResult) => void;
     }
 
+    // One file's current state inside a batch — what a composer rebuilds its tray from
+    // after a restart (offline uploads, OU-13). `state` is one of the five public states:
+    // QUEUED, UPLOADING, UPLOADED, FAILED, REJECTED (the internal presign step reads as
+    // UPLOADING). After a restore it is only ever UPLOADED (done), FAILED (retryable), or
+    // REJECTED (not retryable — remove or replace).
+    interface UploadFileInfo {
+        fileId: string;
+        name?: string;
+        size?: number;
+        mimeType?: string;
+        /** "QUEUED" | "UPLOADING" | "UPLOADED" | "FAILED" | "REJECTED" */
+        state: string;
+        /** Present only when the file is UPLOADED. */
+        attachment?: Attachment;
+        /** Present when the file is FAILED or REJECTED. */
+        error?: CometChatException;
+        /**
+         * Absolute file:// URI of the SDK's own copy of the bytes — what a composer renders a
+         * RESTORED tile's thumbnail from. After a process death the picker URI is revoked and a
+         * file that never uploaded has no hosted URL, so this is the only preview source a
+         * restored FAILED tile has. undefined when the bytes are unavailable (offline OFF,
+         * evicted, or reclaimed after a rejection). Android name: getLocalCopyPath().
+         */
+        localCopyPath?: string;
+        /** @deprecated Use localCopyPath — the same value. */
+        localUri?: string;
+    }
+
     // Not constructible directly — obtain an instance via CometChat.createUploadFileRequest().
     // `interface` (not `class`) so the type is usable as a return/annotation but `new
     // CometChat.UploadFileRequest()` is a compile error, matching the runtime (no such static).
@@ -572,11 +600,28 @@ export namespace CometChat {
         setConcurrency(count: number): UploadFileRequest;
         uploadAttachments(files: { fileId: string; file: FileInput }[], listener: UploadFileListener): void;
         uploadAttachment(fileId: string, file: FileInput, listener: UploadFileListener): void;
+        /**
+         * Retry ONE retryable-failed file BY ID — the SDK streams from its own copy of the
+         * bytes, so this works after an app restart with no re-supply of the file. Mints a
+         * fresh upload target and re-uploads the whole file (no mid-transfer resume).
+         * Requires offline messaging to be enabled.
+         */
+        retryAttachment(fileId: string, listener?: UploadFileListener): void;
+        /** Retry every retryable-failed file in the batch. */
+        retryAll(listener?: UploadFileListener): void;
         getAttachment(fileId: string): Attachment | null;
         getAttachments(): Attachment[];
         getAttachmentsByType(type: string): Attachment[];
         getAttachmentCount(): number;
         getStatus(): UploadStatus;
+        /**
+         * EVERY file in the batch, in the order they were added, with its current state —
+         * what a composer rebuilds its tray from after a restart. `getAttachments()` returns
+         * only the files that finished uploading, which cannot express retryable tiles.
+         */
+        getItems(): UploadFileInfo[];
+        /** @deprecated Use getItems() — the same list under the Android name. */
+        getFiles(): UploadFileInfo[];
         addUploadListener(listener: UploadFileListener): void;
         removeUploadListener(): void;
         removeAttachment(fileId: string): void;
@@ -584,6 +629,23 @@ export namespace CometChat {
     }
 
     function createUploadFileRequest(receiverId: string, receiverType: string): UploadFileRequest;
+    /**
+     * Read back the EXISTING upload batch for a destination — re-attached, with each file's
+     * current state — or null when there is none. The offline restore path: call it on chat
+     * open and rebuild the composer's tray from `request.getItems()`.
+     *
+     * Every parameter is identical to when the batch was created (receiver, thread parent,
+     * batch id, concurrency, and each file's id / name / size / mime / state / attachment /
+     * failure reason, in insertion order). Listeners are transient — re-register them. The
+     * original file handles are gone; retry with `retryAttachment(fileId)`.
+     *
+     * Nothing uploads as a result of this call. Always resolves null when offline is off.
+     */
+    function getExistingUploadFileRequest(
+        receiverId: string,
+        receiverType: string,
+        parentMessageId?: string | number
+    ): Promise<UploadFileRequest | null>;
     function getMaxAttachmentCount(): Promise<number>;
 }
 
@@ -1384,6 +1446,10 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function sendMessage(message: TextMessage | MediaMessage | CustomMessage | InteractiveMessage |any): Promise<TextMessage | MediaMessage | CustomMessage | InteractiveMessage | BaseMessage>;
+        /**
+            * Offline: additive 3-phase send — onMessagePending (queued locally, status PENDING, local id set; fires only when offline is enabled) → onMessageSent (server ack) or onError (failure, `reason` set). Passing a listener STILL returns the Promise (it resolves/rejects off the server phase); consume the final result from one channel. Sent while offline, the message stays durably PENDING: the listener gets onMessagePending, then ONE onError with the not-connected code and `reason == null` (the Promise rejects with it), and onMessageSent follows on reconnect (see MessageSentListener).
+        */
+        export function sendMessage(message: TextMessage | MediaMessage | CustomMessage | InteractiveMessage | any, listener?: MessageSentListener): Promise<TextMessage | MediaMessage | CustomMessage | InteractiveMessage | BaseMessage>;
         
         /**
             * Function to send a message to user.
@@ -1410,6 +1476,7 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function sendMediaMessage(message: Object): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
+        export function sendMediaMessage(message: Object, listener?: MessageSentListener): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
         
         /**
             * Function to send a custom message.
@@ -1418,6 +1485,7 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function sendCustomMessage(message: CustomMessage): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
+        export function sendCustomMessage(message: CustomMessage, listener?: MessageSentListener): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
          
         /**
             *
@@ -1427,6 +1495,7 @@ export namespace CometChat {
             * @memberof CometChat
          */
         export function sendInteractiveMessage(message: InteractiveMessage): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
+        export function sendInteractiveMessage(message: InteractiveMessage, listener?: MessageSentListener): Promise<TextMessage | BaseMessage | MediaMessage | CustomMessage>;
         
         /**
             * Function to get the last delivered message id from local storage.
@@ -1516,6 +1585,9 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function getMessageDetails(messageId: string | any): Promise<TextMessage | MediaMessage | CustomMessage | InteractiveMessage |BaseMessage>;
+        /** Offline: two-phase — cache phase then server phase. See {@link MessageDetailsListener}. */
+        export function getMessageDetails(messageId: string | any, listener: MessageDetailsListener): Promise<TextMessage | MediaMessage | CustomMessage | InteractiveMessage |BaseMessage>;
+        
 
 
         /**
@@ -1543,7 +1615,11 @@ export namespace CometChat {
             /** The raw uid/guid — no name, no avatar. Hydrate lazily, never drop the row. */
             getReceiverId(): string;
             setReceiverId(receiverId: string): void;
-            /** Presence in a thread LIST is itself the subscription, so list rows read true. */
+            /**
+             * On a `setParticipatedByMe(true)` list (the default) every row reads true: presence in the list is the
+             * subscription. On a `setParticipatedByMe(false)` list the server does not send the follow state, so every
+             * row reads false.
+             */
             isSubscribed(): boolean;
             setSubscribed(subscribed: boolean): void;
             /** Null means unknown, NOT zero. */
@@ -1571,8 +1647,13 @@ export namespace CometChat {
             getUid(): string;
             /** True while the server may still have rows. */
             hasMore(): boolean;
-            /** Resolves [] once exhausted; never resolves [] while hasMore() is true. */
-            fetchNext(): Promise<MessageThread[]>;
+            /**
+                * Resolves [] once exhausted; never resolves [] while hasMore() is true.
+                * Offline: with a listener, a two-phase read — onCachedThreads (my threads from the
+                * local store, or the recorded all-threads snapshot; may be empty) then onServerThreads
+                * (the page the Promise resolves with). Without a listener, behaviour is unchanged.
+            */
+            fetchNext(listener?: ThreadFetchListener): Promise<MessageThread[]>;
         }
 
         export class ThreadsRequestBuilder {
@@ -1914,6 +1995,8 @@ export namespace CometChat {
             * @memberof CometChat
         */
         export function getConversation(conversationWith: string, conversationType: string): Promise<Conversation>;
+        /** Offline: two-phase — cache phase then server phase. See {@link ConversationDetailsListener}. */
+        export function getConversation(conversationWith: string, conversationType: string, listener: ConversationDetailsListener): Promise<Conversation>;
 
         /**
          * Function to tag a conversation for a specific user/group.
@@ -2448,6 +2531,21 @@ export namespace CometChat {
         // Notification Feed Methods
         export function addNotificationFeedListener(name: string, notificationFeedListener: NotificationFeedListener): void;
         export function removeNotificationFeedListener(name: string): void;
+        /**
+            * Function to add a Conversation Listener, for conversation pin/unpin events from the
+            * logged-in user's other devices and from admin pins. The device that pins or unpins
+            * receives no event — it learns the result from pinConversation/unpinConversation.
+            * @param {string} name
+            * @param {ConversationListener} conversationListener
+            * @memberof CometChat
+        */
+        export function addConversationListener(name: string, conversationListener: ConversationListener): void;
+        /**
+            * Function to remove a Conversation Listener.
+            * @param {string} name
+            * @memberof CometChat
+        */
+        export function removeConversationListener(name: string): void;
         export function markFeedItemAsDelivered(feedItem: NotificationFeedItem): Promise<void>;
         export function markFeedItemsAsDelivered(feedItems: NotificationFeedItem[]): Promise<void>;
         export function markFeedItemAsRead(feedItem: NotificationFeedItem): Promise<void>;
@@ -2718,12 +2816,14 @@ export class MediaMessage extends BaseMessage implements Message {
          */
         setData(value: Object): void;
         /**
-            * Method to get attachment of media message.
+            * The first attachment of the message — always the same attachment as
+            * getAttachments()[0] — or null when the message has none.
             * @returns {Attachment}
          */
         getAttachment(): Attachment;
         /**
-            * Method to set attachment of media message.
+            * APPENDS an attachment. On a message holding `a`, setAttachment(b) leaves [a, b] and
+            * getAttachment() is still `a`. null is a no-op. Use setAttachments(list) to replace.
             * @param {Attachment} attachment
          */
         setAttachment(attachment: Attachment): void;
@@ -2870,6 +2970,14 @@ export class BaseMessage implements Message {
             * Sets the MUID of the message.
          */
         setMuid(value: string): void;
+        /** Offline: the SDK-generated local id — the stable message handle until the server id arrives (never `muid`). */
+        getLocalMessageId(): string | undefined;
+        /** Offline: derived message status — PENDING | SENDING | SENT | DELIVERED | READ | FAILED. */
+        getMessageStatus(): MessageStatus;
+        /** Offline (BEH-SEND-35): why this queued send FAILED, or `undefined` when it has not failed. Never serialized to the server; cleared on retry (→ PENDING) and on send. */
+        getFailureReason(): MessageFailureReason | undefined;
+        /** Offline: REALTIME (live socket) vs SYNC (delivered by a reconnect catch-up sweep — suppress notification sounds). */
+        getSource(): MessageSource;
         /**
             * Get sender of the message.
             * @returns {User}
@@ -3024,6 +3132,16 @@ export class BaseMessage implements Message {
             * Set UID of the user who deleted the message.
          */
         setDeletedBy(deletedBy: string): void;
+        /**
+            * Get the server-side timestamp of when the message was last updated.
+            * @returns {number}
+         */
+        getUpdatedAt(): number;
+        /**
+            * @param {number} updatedAt
+            * Set the server-side timestamp of when the message was last updated.
+         */
+        setUpdatedAt(updatedAt: number): void;
         /**
             * Get the timestamp at which the message was pinned to its conversation.
             * Conversation-wide and visible to everyone.
@@ -4419,6 +4537,11 @@ export class MessageListener {
          */
         onTextMessageReceived?: Function;
         /**
+            * Offline: a batch of already-cached messages UPDATED while offline (edits, deletes, reactions,
+            * receipts), reconciled by the catch-up sweep with `source == SYNC`. Upsert by id; never append.
+         */
+        onMessagesSynced?: Function;
+        /**
             * This event is triggered when a media message is received.
          */
         onMediaMessageReceived?: Function;
@@ -4500,19 +4623,21 @@ export class MessageListener {
         onCardMessageReceived?: Function;
         /**
          * This event is triggered when a message is pinned to a conversation.
-         * Broadcast to everyone in the conversation. Carries the full BaseMessage,
+         * Broadcast to everyone in the conversation except the device that pinned it, which
+         * learns from the pinMessage() promise. Carries the full BaseMessage,
          * so getPinnedAt()/getPinnedBy() are readable without a further fetch.
         */
         onMessagePinned?: Function;
         /**
          * This event is triggered when a message is unpinned from a conversation.
-         * Broadcast. Carries the full BaseMessage, with the pin attrs cleared.
+         * Broadcast, except to the device that unpinned it (it learns from the unpinMessage()
+         * promise). Carries the full BaseMessage, with the pin attrs cleared.
         */
         onMessageUnpinned?: Function;
         /**
          * This event is triggered when the logged-in user saves a message.
-         * Private: it reaches only that user's own devices, including the one that
-         * made the call, so a second device can sync its bookmark.
+         * Private: it reaches only that user's OTHER devices, so a second device can sync
+         * its bookmark. The device that made the call learns from the saveMessage() promise.
         */
         onMessageSaved?: Function;
         /**
@@ -5076,7 +5201,7 @@ export class GroupsRequest {
             * Get list of next set of groups based on the parameters specified in GroupsRequestBuilder class The Developer need to call this method repeatedly using the same object of GroupsRequest class to get paginated list of groups.
             * @returns {Promise<Group[] | []>}
          */
-        fetchNext(): Promise<Group[] | []>;
+        fetchNext(listener?: GroupFetchListener): Promise<Group[] | []>;
         /**
             * Gets the limit on the number of groups to be fetched in a single operation.
             *
@@ -5182,7 +5307,7 @@ export class GroupMembersRequest {
             * Get list of next set of group members based on the parameters specified in GroupMembersRequestBuilder class. The Developer need to call this method repeatedly using the same object of GroupMembersRequest class to get paginated list of group members.
             * @returns {Promise<GroupMember[] | []>}
          */
-        fetchNext(): Promise<GroupMember[] | []>;
+        fetchNext(listener?: GroupMemberFetchListener): Promise<GroupMember[] | []>;
         /**
             * Get the unique identifier of the group for which members are requested.
             *
@@ -5284,7 +5409,7 @@ export class BannedMembersRequest {
             * Get list of next set of banned members based on the parameters specified in BannedMembersRequestBuilder class. The Developer need to call this method repeatedly using the same object of BannedMembersRequest class to get paginated list of banned members.
             * @returns {Promise<GroupMember[] | []>}
          */
-        fetchNext(): Promise<GroupMember[] | []>;
+        fetchNext(listener?: BannedGroupMemberFetchListener): Promise<GroupMember[] | []>;
         /**
             * Get the unique identifier of the group for which banned members are requested.
             *
@@ -5466,7 +5591,7 @@ export class UsersRequest {
             * Get list of next set of users based on the parameters specified in UsersRequestBuilder class The Developer need to call this method repeatedly using the same object of UsersRequestBuilder class to get paginated list of users.
             * @returns {Promise<User[] | []>}
          */
-        fetchNext(): Promise<User[] | []>;
+        fetchNext(listener?: UserFetchListener): Promise<User[] | []>;
 }
 export class UsersRequestBuilder {
         /** @private */ limit: number;
@@ -5589,9 +5714,10 @@ export class ConversationsRequest {
         constructor(builder?: ConversationsRequestBuilder);
         /**
             * Get list of next set of conversations based on the parameters specified in ConversationsRequestBuilder class. The Developer need to call this method repeatedly using the same object of ConversationsRequest class to get paginated list of conversations.
+            * Offline: additive two-phase read — onCachedConversations (instant, from the local cache; may be empty) then onServerConversations (authoritative). Passing a listener STILL returns the Promise (resolves with the server page, rejects on error / offline); with offline off, only onServerConversations fires.
             * @returns {Promise<Conversation[] | []>}
-         */
-        fetchNext(): Promise<Conversation[] | []>;
+        */
+        fetchNext(listener?: ConversationFetchListener): Promise<Conversation[] | []>;
         /**
             * Checks if blocked users are to be included in the list of conversations.
             * @returns {boolean}
@@ -6003,14 +6129,16 @@ export class MessagesRequest {
         isHideQuotedMessages(): boolean;
         /**
             * Get list of next messages based on the parameters specified in MessagesRequestBuilder class. The Developer need to call this method repeatedly using the same object of MessagesRequest class to get paginated list of message.
+            * Offline: additive two-phase read — onCachedMessages (instant, from the local cache; may be empty) then onServerMessages (authoritative). Passing a listener STILL returns the Promise (resolves with the server page, rejects on error / offline); with offline off, only onServerMessages fires.
             * @returns {Promise<BaseMessage[] | []>}
         */
-        fetchNext(): Promise<BaseMessage[] | []>;
+        fetchNext(listener?: MessageFetchListener): Promise<BaseMessage[] | []>;
         /**
             * Get list of previous messages based on the parameters specified in MessagesRequestBuilder class. The Developer need to call this method repeatedly using the same object of MessagesRequest class to get paginated list of message.
+            * Offline: additive two-phase read — onCachedMessages (instant, from the local cache; may be empty) then onServerMessages (authoritative). Passing a listener STILL returns the Promise (resolves with the server page, rejects on error / offline); with offline off, only onServerMessages fires.
             * @returns {Promise<BaseMessage[] | []>}
         */
-        fetchPrevious(): Promise<BaseMessage[] | []>;
+        fetchPrevious(listener?: MessageFetchListener): Promise<BaseMessage[] | []>;
 }
 export class MessagesRequestBuilder {
         /** @private */ limit?: number;
@@ -6466,7 +6594,13 @@ export class BlockedUsersRequest {
             * Get list of next set of blocked users based on the parameters specified in BlockedUsersRequestBuilder class. The Developer need to call this method repeatedly using the same object of BlockedUsersRequest class to get paginated list of blocked users.
             * @returns {Promise<User[] | []>}
          */
-        fetchNext(): Promise<User[] | []>;
+        fetchNext(listener?: UserFetchListener): Promise<User[] | []>;
+        /**
+            * Offline: additive two-phase read — onCachedUsers (instant, from the local blocked-users
+            * store; served only for an explicit `blockedByMe` direction) then onServerUsers
+            * (authoritative). Passing a listener STILL returns the Promise; with offline off,
+            * only onServerUsers fires.
+         */
         /**
             * Gets the direction type to determine the nature of the blocked users to be fetched.
             * The direction specifies whether to fetch users who are blocked by the logged-in user,
@@ -6553,12 +6687,16 @@ export interface CometChatSettings {
                 autoEstablishSocketConnection?: boolean;
                 adminHost?: string | null;
                 clientHost?: string | null;
+                /** Offline messaging: `true` (all defaults) or a config object. A missing `enabled` is `false` (offline stays off). */
+                offline?: boolean | OfflineConfigOptions;
         };
         callsSDK?: Record<string, unknown>;
         uiKit?: Record<string, unknown>;
 }
 
 export class AppSettings {
+        /** The applied offline-messaging config, or `null` when none was set (offline off). */
+        getOfflineConfig(): OfflineConfig | null;
         static SUBSCRIPTION_TYPE_NONE: string;
         static SUBSCRIPTION_TYPE_ALL_USERS: string;
         static SUBSCRIPTION_TYPE_ROLES: string;
@@ -6682,6 +6820,14 @@ export class AppSettingsBuilder {
             * @returns
          */
         subscribePresenceForFriends(): this;
+        /**
+            * Offline messaging: supply the full config object. Takes precedence over the `offline(boolean)` shorthand when both are supplied (the object's `enabled` wins).
+        */
+        setOfflineConfig(config: OfflineConfig): this;
+        /**
+            * Offline messaging: boolean shorthand — enable with every default value. Ignored if a config object was already supplied via `setOfflineConfig` (object wins).
+        */
+        offline(enabled?: boolean): this;
         /**
             * @param {string} region
             * A method to set region of the app.
@@ -6886,6 +7032,8 @@ export class Attachment {
             * @param {string} mimeType
          */
         setMimeType(mimeType: string): void;
+        /** Offline: local file path when the media bytes are cached on device (client-only; never serialized to the wire). */
+        getLocalPath(): string | undefined;
         /**
             * Get name of the file.
             * @returns {string}
@@ -8187,19 +8335,20 @@ export class ReactionsRequest {
         * Get list of next reactions list based on the parameters specified in ReactionsRequestBuilder class. The Developer need to call this method repeatedly using the same object of ReactionsRequest class to get paginated list of reactions.
         * @returns {Promise<Reaction[] | []>}
         */
-    fetchNext(): Promise<Reaction[] | []>;
+    fetchNext(listener?: ReactionFetchListener): Promise<Reaction[] | []>;
     /**
         * Get list of previous reactions list based on the parameters specified in ReactionsRequestBuilder class. The Developer need to call this method repeatedly using the same object of ReactionsRequest class to get paginated list of reactions.
         * @returns {Promise<Reaction[] | []>}
         */
-    fetchPrevious(): Promise<Reaction[] | []>;
+    fetchPrevious(listener?: ReactionFetchListener): Promise<Reaction[] | []>;
 }
 export class ReactionsRequestBuilder {
     /** @private */ limit?: number;
     /** @private */ msgId: number;
     /** @private */ reaction?: string;
     /**
-        * A method to set limit for the number of entries returned in a single iteration. A maximum of 20 entries can fetched in a single iteration.
+        * A method to set limit for the number of entries returned in a single iteration. Up to 1000 entries can be
+        * fetched in a single iteration (the server's cap); a larger limit is treated as 1000.
         * @param {number} limit
         * @returns
         */
@@ -8281,6 +8430,19 @@ export class NotificationFeedListener {
     constructor(options: { onFeedItemReceived?: (feedItem: NotificationFeedItem) => void });
 }
 
+/**
+    * Conversation events — pin/unpin. Fired for pins made on the logged-in user's other devices
+    * and for admin pins. Never fired for a pin or unpin made on this device: that one learns
+    * from the pinConversation()/unpinConversation() promise. The payload
+    * may be compact (no last message or unread count): merge its pin attributes into the
+    * conversation you already hold rather than replacing it.
+*/
+export class ConversationListener {
+    onConversationPinned?: (conversation: Conversation) => void;
+    onConversationUnpinned?: (conversation: Conversation) => void;
+    constructor(options: { onConversationPinned?: (conversation: Conversation) => void; onConversationUnpinned?: (conversation: Conversation) => void });
+}
+
 export class NotificationFeedRequest {
     constructor(builder?: NotificationFeedRequestBuilder);
     getLimit(): number;
@@ -8290,7 +8452,7 @@ export class NotificationFeedRequest {
     getTags(): string[] | null;
     getDateFrom(): string | null;
     getDateTo(): string | null;
-    fetchNext(): Promise<NotificationFeedItem[]>;
+    fetchNext(listener?: FeedItemFetchListener): Promise<NotificationFeedItem[]>;
 }
 
 export class NotificationFeedRequestBuilder {
@@ -8314,5 +8476,541 @@ export class NotificationCategoriesRequestBuilder {
     setLimit(limit: number): this;
     build(): NotificationCategoriesRequest;
 }
+
+/* ═══════════════════════ Offline Messaging (opt-in) ═══════════════════════ */
+
+/** Offline: derived message status. */
+export enum MessageStatus {
+        PENDING = "PENDING",
+        SENDING = "SENDING",
+        SENT = "SENT",
+        DELIVERED = "DELIVERED",
+        READ = "READ",
+        FAILED = "FAILED",
+}
+
+/** Offline: how a message reached this device — live socket vs reconnect catch-up sweep. */
+export enum MessageSource {
+        REALTIME = "REALTIME",
+        SYNC = "SYNC",
+}
+
+/** Offline: why a queued send failed. */
+export enum MessageFailureReason {
+        /** Server overloaded / throttled (HTTP 5xx, 429; fails at once), or no answer on 5 reconnects in a row (`ERROR_OUTBOX_AUTO_FLUSH_CAP_REACHED`). `retryAllFailedMessages()` re-sends it. */
+        TRANSIENT = "TRANSIENT",
+        /** Rejected (4xx / blocked / auth / unknown), or a queued message that cannot be rebuilt / its media copy failed. Retry per message. */
+        PERMANENT = "PERMANENT",
+        QUEUE_OVERFLOW = "QUEUE_OVERFLOW",
+        QUEUE_FULL = "QUEUE_FULL",
+        BYTE_OVERFLOW = "BYTE_OVERFLOW",
+        /** Removed before it was sent — `clearOfflineCache()`, or its conversation was purged (deleted, left, kicked/banned, or gone from the server list). Final. */
+        DISCARDED = "DISCARDED",
+}
+
+/** Offline: why the SDK wiped and rebuilt the offline cache on its own (see `OfflineCacheResetListener`). */
+export enum OfflineCacheResetReason {
+        KEY_LOST = "KEY_LOST",
+        WRONG_KEY = "WRONG_KEY",
+        CORRUPTED = "CORRUPTED",
+        ESCALATED = "ESCALATED",
+        /** The app changed the `encryption` setting, so the existing cache could not be reused. */
+        ENCRYPTION_CHANGED = "ENCRYPTION_CHANGED",
+        /** The cache had a schema this SDK cannot migrate (a newer SDK's, after a rollback, or an older one no migration covers), so it was rebuilt. */
+        SCHEMA_RESET = "SCHEMA_RESET",
+}
+
+/** Offline: told when the SDK wiped and rebuilt the offline cache (register via `CometChat.addOfflineCacheResetListener`). */
+export interface OfflineCacheResetListener {
+        /**
+         * @param pendingMessagesLost unsent messages lost in the wipe, or `-1`
+         * (`CometChat.OFFLINE_PENDING_COUNT_UNKNOWN`) when they could not be counted — "unknown", not "none".
+         */
+        onOfflineCacheReset?(reason: OfflineCacheResetReason, pendingMessagesLost: number): void;
+}
+
+/** Offline: `pendingMessagesLost` value meaning "could not be counted" (NOT "none"). */
+export const OFFLINE_PENDING_COUNT_UNKNOWN: -1;
+
+/** Offline: media caching mode — `AUTO` caches incoming media bytes, `OFF` caches metadata only. Fixed for the SDK session. */
+export enum MediaCachingMode {
+        AUTO = "AUTO",
+        OFF = "OFF",
+}
+
+/** Offline: what happens when cache encryption cannot run at all (no SQLCipher in the build, or no secure key store). */
+export enum EncryptionFailureBehavior {
+        /** Default. Refuse to open the cache and run online-only; never write plaintext. */
+        ONLINE_ONLY = "ONLINE_ONLY",
+        /** Open an unencrypted cache instead. Wrong for compliance-driven encryption. */
+        PLAINTEXT_FALLBACK = "PLAINTEXT_FALLBACK",
+}
+
+/** Offline: which backend actually holds the cache encryption key. */
+export type OfflineKeyStorageKind = "KEYSTORE" | "SOFTWARE" | "NONE";
+
+/** Offline: a custom key vault for the cache encryption key (`CometChat.setOfflineKeyVault`). */
+export interface OfflineKeyVault {
+        /** The stored 64-char hex key, or `null` if this service has none yet. */
+        get(service: string): Promise<string | null>;
+        /** Persist `hexKey` (64 hex chars) for `service`. Overwrites any existing entry. */
+        set(service: string, hexKey: string): Promise<void>;
+        /** Remove this service's entry. Must resolve (not throw) when nothing is stored. */
+        delete(service: string): Promise<void>;
+        /** The backend actually used; a vault that degraded reports `"SOFTWARE"`. */
+        kind(): OfflineKeyStorageKind;
+}
+
+/**
+ * Offline: supply the secure key vault for cache encryption. Only needed when `react-native-keychain`
+ * is not installed (it is auto-detected). Call before `CometChat.init`; `null` resets to
+ * auto-detection. Write-only: nothing public reads key material. An app-supplied vault is reported
+ * as `keyStorage: "SOFTWARE"`.
+ */
+export function setOfflineKeyVault(vault: OfflineKeyVault | null): void;
+
+/** Offline: what cache encryption is actually doing right now (`CometChat.getOfflineEncryptionStatus()`). */
+export interface OfflineEncryptionStatus {
+        /** What the app configured; `false` while the server kill switch is off. */
+        enabled: boolean;
+        /** The tier achieved for the store open right now. The full cross-SDK set; RN produces only `SQLCIPHER` or `NONE`. */
+        atRest: "NONE" | "SQLCIPHER" | "FIELD_AES_GCM";
+        /** Where the key in use lives (`KEYSTORE`, `SOFTWARE` or `NONE`); `NONE` when this session holds no key. */
+        keyStorage: OfflineKeyStorageKind;
+        /** With encryption configured: whether SQLCipher is in the build (regardless of switch/login). */
+        cipherAvailable: boolean;
+        /** SQLCipher's version string once an encrypted open is proven, else `null`. */
+        cipher: string | null;
+        /** Always filled: what is not encrypted (media files). */
+        leakage: string;
+}
+
+/** Offline: error codes on `CometChatException.code`. */
+export const OfflineErrorCode: {
+        /**
+         * An unsent message was removed (`clearOfflineCache()`, a conversation purge or `discardLocalMessage`); reason
+         * `DISCARDED`. A logout or user switch also ends every unsent send of the session: the Promise `sendMessage`
+         * returned rejects once with this code and no listener fires.
+         */
+        readonly MESSAGE_DISCARDED: "ERROR_OFFLINE_MESSAGE_DISCARDED";
+        /** `retryMessage` on an id that is unknown or not FAILED. */
+        readonly MESSAGE_NOT_RETRYABLE: "ERROR_OFFLINE_MESSAGE_NOT_RETRYABLE";
+        /** `discardLocalMessage` / `retryMessage` on a send already on the wire (SENDING) — its answer decides (R160). */
+        readonly MESSAGE_IN_FLIGHT: "ERROR_OFFLINE_MESSAGE_IN_FLIGHT";
+        /** `discardLocalMessage` / `retryMessage` on an id that is unknown or already sent (R160). */
+        readonly MESSAGE_NOT_FOUND: "ERROR_OFFLINE_MESSAGE_NOT_FOUND";
+        /** No answer on 5 reconnects in a row (reason `TRANSIENT`); `retryMessage` / `retryAllFailedMessages` re-send it. */
+        readonly AUTO_FLUSH_CAP_REACHED: "ERROR_OUTBOX_AUTO_FLUSH_CAP_REACHED";
+        /** The outbox refused or evicted a send at its pending-count / media-byte cap; the reason is `QUEUE_FULL`, `QUEUE_OVERFLOW` or `BYTE_OVERFLOW`. */
+        readonly PENDING_QUEUE_LIMIT: "ERROR_PENDING_QUEUE_LIMIT";
+        readonly DISABLED: "ERROR_OFFLINE_DISABLED";
+        readonly SYNC_IN_PROGRESS: "ERROR_OFFLINE_SYNC_IN_PROGRESS";
+        readonly SYNC_COOLDOWN: "ERROR_OFFLINE_SYNC_COOLDOWN";
+        /**
+         * The offline store could not be read or written right now (busy, locked, full). Android's code. From
+         * `getPendingMessages`, `retryMessage`, `retryAllFailedMessages` or `discardLocalMessage`: the store is
+         * momentarily unavailable; try again. A send does not fail with it: a message the store cannot save when you
+         * send it is sent once directly, without being queued (no pending callback, and no retry after a reconnect).
+         */
+        readonly MESSAGE_PERSIST_FAILED: "ERROR_OFFLINE_MESSAGE_PERSIST_FAILED";
+        /** A queued media message's file could not be copied into the SDK's storage; the send fails for good (reason `PERMANENT`). Android's code. */
+        readonly MEDIA_COPY_FAILED: "ERROR_OFFLINE_MEDIA_COPY_FAILED";
+};
+
+/** Offline: outbox behavior when the pending cap / media budget is hit. */
+export enum PendingMessageOverflowPolicy {
+        DROP_OLDEST = "DROP_OLDEST",
+        REJECT_NEWEST = "REJECT_NEWEST",
+}
+
+/** Offline: catch-up sync state. */
+export enum SyncState {
+        IDLE = "IDLE",
+        SYNCING = "SYNCING",
+}
+
+/**
+ * Offline: configuration options. `cacheDurationDays` is in days, sizes in bytes. Bad values are normalized, never
+ * rejected: `0`/`null` means unlimited only for the byte caps (`maxStorageSize`, `maxMediaCacheSize`) and no TTL for
+ * `cacheDurationDays`; the count caps clamp to their range (`0` maps to the ceiling), and the snapshot keys
+ * (`maxSnapshotQueries`, `snapshotTtlDays`) take their default for `0` or a negative value.
+ */
+export interface OfflineConfigOptions {
+        /** Master gate. Nothing local opens unless this is `true`. Default `false`. */
+        enabled?: boolean;
+        /**
+         * Encrypt the on-device cache at rest with SQLCipher (whole database file). Default `false`.
+         * Needs `{"op-sqlite": {"sqlcipher": true}}` in your app's `package.json` and a secure key store
+         * (`react-native-keychain`, or `CometChat.setOfflineKeyVault()`). Fixed for the session.
+         */
+        encryption?: boolean;
+        /** What happens when encryption cannot run at all. Default `ONLINE_ONLY`. Only read when `encryption` is `true`. */
+        encryptionFailureBehavior?: EncryptionFailureBehavior;
+        /** Message retention TTL in **days** (int). `0` = no TTL prune. Default `0` (unlimited). */
+        cacheDurationDays?: number;
+        /** Logical DB byte ceiling. `0` = unlimited. Default 250 MB. */
+        maxStorageSize?: number;
+        /** Per-conversation cached window. Clamped to `[1, 1000]` (`0` maps to 1000, not unlimited). Default 500. */
+        maxMessagesPerConversation?: number;
+        /**
+         * Cached conversation count (whole-conversation LRU). Default 100.
+         *
+         * Normalized into `[1, 1000]`: **`0` does NOT mean unlimited here** (it maps to
+         * 1000), and anything above 1000 clamps to 1000. Guarantee: at most 1000
+         * conversations are ever stored.
+         */
+        maxConversations?: number;
+        /** Max distinct entity-list snapshots kept. `0` or negative means the default. Default 100. */
+        maxSnapshotQueries?: number;
+        /** Days a recorded entity-list snapshot stays valid. `0` or negative means the default. Default 7. */
+        snapshotTtlDays?: number;
+        /** Outbox cap. Clamped to `[1, 100]` (`0` maps to 100, not unlimited). Default 50. */
+        maxPendingMessages?: number;
+        /** Flush the pending outbox on reconnect. Default `true`. Gates only the flush — never the sweep. */
+        autoSendPendingOnReconnect?: boolean;
+        /** Behavior when the pending cap / media budget is hit. Default `REJECT_NEWEST`. */
+        pendingQueueOverflowPolicy?: PendingMessageOverflowPolicy;
+        /** Media-only byte budget (LRU). `0` = unlimited. Default 500 MB. */
+        maxMediaCacheSize?: number;
+        /** Media caching mode (`AUTO`/`OFF`). Default `AUTO`. Unknown values fall back to the default. */
+        mediaCaching?: MediaCachingMode;
+}
+
+/** Offline: immutable configuration. OFF by default; pass to `AppSettingsBuilder.setOfflineConfig`. */
+export class OfflineConfig {
+        constructor(options?: OfflineConfigOptions);
+        /** A config with every default value (offline OFF). */
+        static default(): OfflineConfig;
+        /** Normalize `true` / `false` / a plain options object into an OfflineConfig. In the object form a missing `enabled` is `false`. */
+        static fromJson(value: boolean | OfflineConfigOptions | null | undefined): OfflineConfig;
+        isEnabled(): boolean;
+        isEncryptionEnabled(): boolean;
+        /** Android-named alias of `isEncryptionEnabled()`. */
+        isEncryption(): boolean;
+        getEncryptionFailureBehavior(): EncryptionFailureBehavior;
+        getCacheDurationDays(): number;
+        getMaxStorageSize(): number;
+        getMaxMessagesPerConversation(): number;
+        getMaxConversations(): number;
+        getMaxSnapshotQueries(): number;
+        getSnapshotTtlDays(): number;
+        getMaxPendingMessages(): number;
+        isAutoSendPendingOnReconnect(): boolean;
+        getPendingQueueOverflowPolicy(): PendingMessageOverflowPolicy;
+        getMediaCaching(): MediaCachingMode;
+        getMaxMediaCacheSize(): number;
+}
+
+/** Offline: 3-phase per-call send listener. */
+export interface MessageSentListener {
+        /**
+         * Message persisted to the local outbox (optimistic). Fires only when offline is enabled, with
+         * `getMessageStatus() === PENDING` and `getLocalMessageId()` set.
+         */
+        onMessagePending?(message: BaseMessage): void;
+        /** Server acknowledged the send (also after a reconnect for a queued send). */
+        onMessageSent(message: BaseMessage): void;
+        /**
+         * With `reason` set: the send failed (the message is FAILED). With `reason == null` after
+         * `onMessagePending`: the ONE not-connected notice of a queued send (offline at send time, or
+         * the first attempt got no answer) — the message stays PENDING and `onMessageSent` (or a final
+         * failure) still follows. Don't re-send it. The error carries `code: "FAILED_TO_FETCH"` and
+         * `errorParams: { queued: true, status: "PENDING", localMessageId }`; the Promise form rejects
+         * with the same error.
+         */
+        onError(error: CometChatException, reason?: MessageFailureReason | null): void;
+}
+
+/** Offline: two-phase message read listener (cache phase then server phase). */
+/**
+    * Two-phase threads-read listener: pass to `ThreadsRequest.fetchNext(listener)`.
+    * Exactly one of `onServerThreads` / `onError` fires per read.
+*/
+export interface ThreadFetchListener {
+        /** Instant result from the local cache (may be empty). An empty page is the end of what's cached, never the end of the list. */
+        onCachedThreads?(threads: CometChat.MessageThread[]): void;
+        /** The authoritative server page. */
+        onServerThreads(threads: CometChat.MessageThread[]): void;
+        /** Server-phase failure — including a clean offline. */
+        onError(error: CometChatException): void;
+}
+/** The Android name of {@link ThreadFetchListener} (same interface). */
+export type ThreadsFetchListener = ThreadFetchListener;
+
+export interface MessageFetchListener {
+        /** Instant result from the local cache — always fires first; empty when any filter is server-only. */
+        onCachedMessages?(messages: BaseMessage[]): void;
+        /** The authoritative server result (fires on both paths; the drop-in for the old promise resolve). */
+        onServerMessages(messages: BaseMessage[]): void;
+        /**
+            * Server-phase failure — including a clean offline, even when `onCachedMessages`
+            * already delivered. A cache-phase failure is non-fatal and never surfaces here.
+            * Exactly one of `onServerMessages` / `onError` fires per read.
+            */
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase conversation read listener (cache phase then server phase). */
+export interface ConversationFetchListener {
+        onCachedConversations?(conversations: Conversation[]): void;
+        onServerConversations(conversations: Conversation[]): void;
+        /**
+            * Server-phase failure — including a clean offline, even when
+            * `onCachedConversations` already delivered. Exactly one of
+            * `onServerConversations` / `onError` fires per read.
+            */
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase SINGLE-conversation read listener (cache phase then server phase). The public name on every SDK (BEH-READ-32). */
+export interface ConversationDetailsListener {
+        onCachedConversation?(conversation: Conversation): void;
+        onServerConversation(conversation: Conversation): void;
+        /**
+            * Server-phase failure — including a clean offline, even when
+            * `onCachedConversation` already delivered. Exactly one of
+            * `onServerConversation` / `onError` fires per read.
+            */
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase BANNED-GROUP-MEMBER-list read listener (cache phase then server phase). */
+export interface BannedGroupMemberFetchListener {
+        onCachedBannedGroupMembers?(members: GroupMember[]): void;
+        onServerBannedGroupMembers?(members: GroupMember[]): void;
+        /** Android-named alias of `onCachedBannedGroupMembers` (implement either set). */
+        onCachedGroupMembers?(members: GroupMember[]): void;
+        /** Android-named alias of `onServerBannedGroupMembers` (implement either set). */
+        onServerGroupMembers?(members: GroupMember[]): void;
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase REACTION-list read listener (cache phase then server phase). */
+export interface ReactionFetchListener {
+        onCachedReactions?(reactions: Reaction[]): void;
+        onServerReactions(reactions: Reaction[]): void;
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase NOTIFICATION-FEED read listener (cache phase then server phase). */
+export interface FeedItemFetchListener {
+        onCachedFeedItems?(items: NotificationFeedItem[]): void;
+        onServerFeedItems?(items: NotificationFeedItem[]): void;
+        /** Android-named alias of `onCachedFeedItems` (implement either set). */
+        onCachedNotificationFeedItems?(items: NotificationFeedItem[]): void;
+        /** Android-named alias of `onServerFeedItems` (implement either set). */
+        onServerNotificationFeedItems?(items: NotificationFeedItem[]): void;
+        onError(error: CometChatException): void;
+}
+/** The Android name of {@link FeedItemFetchListener} (same interface). */
+export type NotificationFeedFetchListener = FeedItemFetchListener;
+
+/** Offline: two-phase GROUP-list read listener (cache phase then server phase). */
+export interface GroupFetchListener {
+        onCachedGroups?(groups: Group[]): void;
+        onServerGroups(groups: Group[]): void;
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase GROUP-MEMBER-list read listener (cache phase then server phase). */
+export interface GroupMemberFetchListener {
+        onCachedGroupMembers?(members: GroupMember[]): void;
+        onServerGroupMembers(members: GroupMember[]): void;
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase USER-list read listener (cache phase then server phase). */
+export interface UserFetchListener {
+        onCachedUsers?(users: User[]): void;
+        onServerUsers(users: User[]): void;
+        /**
+            * Server-phase failure — including a clean offline, even when
+            * `onCachedUsers` already delivered. Exactly one of
+            * `onServerUsers` / `onError` fires per read.
+            */
+        onError(error: CometChatException): void;
+}
+
+/** Offline: two-phase SINGLE-message read listener (cache phase then server phase). */
+export interface MessageDetailsListener {
+        onCachedMessage?(message: BaseMessage): void;
+        onServerMessage(message: BaseMessage): void;
+        /**
+            * Server-phase failure — including a clean offline, even when
+            * `onCachedMessage` already delivered. Exactly one of
+            * `onServerMessage` / `onError` fires per read.
+            */
+        onError(error: CometChatException): void;
+}
+
+/** Offline: global outbox observer (register via `CometChat.addOfflineMessageListener`). */
+export interface OfflineMessageListener {
+        onOutboxMessagePending?(message: BaseMessage): void;
+        onOutboxMessageSent?(message: BaseMessage): void;
+        onOutboxMessageFailed?(message: BaseMessage, reason: MessageFailureReason): void;
+}
+
+/** Offline: message-phase result of a catch-up sweep. */
+export enum SyncOutcome {
+        CAUGHT_UP = "CAUGHT_UP",
+        PARTIAL = "PARTIAL",
+}
+
+/** Offline: phase-based catch-up sync observer (register via `CometChat.addSyncListener`). */
+export interface SyncListener {
+        onConversationSyncStarted?(): void;
+        onConversationSyncCompleted?(conversations: Conversation[]): void;
+        onConversationSyncError?(error: CometChatException): void;
+        onMessageSyncStarted?(): void;
+        onMessageSyncCompleted?(messages: BaseMessage[], outcome: SyncOutcome): void;
+        onMessageSyncError?(error: CometChatException): void;
+}
+
+/** Offline: a typed media download failure (never a raw HTTP/network object). */
+export interface MediaError {
+        /** `MEDIA_OFFLINE_NOT_CACHED`, `MEDIA_DOWNLOAD_FAILED`, or `ERROR_INVALID_FILE_URL` (`downloadMedia` on an attachment with no URL). */
+        code: string;
+        message: string;
+}
+
+/**
+ * Offline: RN-named per-call media download callbacks (accepted by `downloadMedia`). Each callback
+ * carries the message's server id (its local id while unsent) and the attachment's key: its URL
+ * without the query string.
+ */
+export interface MediaCallbackListener {
+        onMediaDownloaded?(messageId: string, attachmentKey: string, localPath: string): void;
+        /** Download progress as an integer percent 0..100 (best-effort, monotonic, known-length only). */
+        onMediaProgress?(messageId: string, attachmentKey: string, percent: number): void;
+        onMediaDownloadFailed?(messageId: string, attachmentKey: string, error: MediaError | CometChatException): void;
+}
+
+/**
+ * Offline: the per-call listener of `downloadMedia` - Android's / JS's shape, with the RN names of
+ * `MediaCallbackListener` accepted as aliases (RN names win when both are present).
+ */
+export interface DownloadMediaListener extends MediaCallbackListener {
+        onSuccess?(localPath: string): void;
+        /** Integer percent 0..100, best-effort, monotonic, known-length only. */
+        onProgress?(percent: number): void;
+        onError?(error: MediaError | CometChatException): void;
+}
+
+/** Offline: the global media-download listener. Background downloads carry no progress, so it has none. */
+export interface MediaDownloadListener {
+        onMediaDownloaded?(messageId: string, attachmentKey: string, localPath: string): void;
+        onMediaDownloadFailed?(messageId: string, attachmentKey: string, error: MediaError): void;
+}
+
+/**
+    * Offline: the outbox messages (PENDING / SENDING / FAILED), oldest first, each with `getLocalMessageId()` set.
+    * Rejects with `OfflineErrorCode.MESSAGE_PERSIST_FAILED` when the open store cannot be read (busy, locked, full).
+    * Resolves an empty list when no offline store is open (offline off, or during a start or restart), as on Android;
+    * messages still on disk reappear once the store opens.
+    */
+export function getPendingMessages(): Promise<BaseMessage[]>;
+/**
+    * Offline: retry one send by its local id (`message.getLocalMessageId()`) — R160. A FAILED send is
+    * reset to PENDING and retried; a PENDING send lifts the reconnect hold for it and every PENDING send
+    * ahead of it in its conversation and attempts the queue now (oldest-first). A manual, one-shot attempt:
+    * no answer leaves it PENDING with one not-connected notice. Rejected, never silent, with
+    * `OfflineErrorCode.MESSAGE_IN_FLIGHT` (the send is on the wire), `MESSAGE_NOT_FOUND` (unknown or already
+    * sent) or `MESSAGE_PERSIST_FAILED` (store blip) — it never re-sends a sent message.
+    * Mirrors `sendMessage` — pass a listener and the result arrives on the listener
+    * (returns `void`); omit it and you get the Promise. Never both.
+    */
+export function retryMessage(localMessageId: string): Promise<BaseMessage>;
+export function retryMessage(localMessageId: string, listener: MessageSentListener): void;
+/** Offline: retry every send that FAILED with reason `TRANSIENT` (5xx / 429). The listener, if given, sees each outcome. */
+export function retryAllFailedMessages(): Promise<void>;
+export function retryAllFailedMessages(listener: MessageSentListener): void;
+/** Offline (R160, BEH-SEND-36): per-call listener for `discardLocalMessage` — success/error, no message. */
+export interface DiscardMessageListener {
+        /** The PENDING / FAILED send was removed from this device (its local id handed back). */
+        onSuccess?(localMessageId: string): void;
+        /** The discard was rejected and nothing changed (`MESSAGE_IN_FLIGHT` / `MESSAGE_NOT_FOUND` / `ERROR_OFFLINE_DISABLED` / `MESSAGE_PERSIST_FAILED`). */
+        onError?(error: CometChatException): void;
+}
+/**
+    * Offline (R160, BEH-SEND-36): discard one PENDING or FAILED send by its local id, device-only and
+    * durably — its row, copied media, queued reply-count contribution and last-message-preview slot (which
+    * falls back to the newest remaining message, or empty); a local-only conversation left empty is removed.
+    * Works offline and survives a restart. The listener gets `onSuccess` and NOTHING else (no outbox event;
+    * the original send's listener is released with no final outcome). Rejected, never silent, with
+    * `OfflineErrorCode.MESSAGE_IN_FLIGHT` (on the wire), `MESSAGE_NOT_FOUND` (unknown / already sent),
+    * `ERROR_OFFLINE_DISABLED` (offline off) or `MESSAGE_PERSIST_FAILED` (store blip).
+    * Mirrors `retryMessage` — pass a listener (returns `void`) or omit it for the Promise. Never both.
+    */
+export function discardLocalMessage(localMessageId: string): Promise<void>;
+export function discardLocalMessage(localMessageId: string, listener: DiscardMessageListener): void;
+/** Offline: register a global outbox observer. */
+export function addOfflineMessageListener(id: string, listener: OfflineMessageListener): void;
+export function removeOfflineMessageListener(id: string): void;
+/** Offline: optional callback form of `forceSyncNow` — surfaces the rejection codes below. */
+export interface ForceSyncCallback {
+        onSuccess?(): void;
+        onError?(error: CometChatException): void;
+}
+/**
+ * Offline: on-demand catch-up sweep, through the same single-flight + cooldown throttle
+ * as the reconnect path. Resolves when the sweep completes. When it cannot run now the
+ * Promise rejects (and `callback.onError` fires) with `USER_NOT_LOGED_IN` (the REST layer's code),
+ * `ERROR_OFFLINE_DISABLED`, `ERROR_OFFLINE_SYNC_IN_PROGRESS` or
+ * `ERROR_OFFLINE_SYNC_COOLDOWN` (whose `details.retryAfterMs` says when to retry).
+ * `callback.onSuccess` fires when the sweep is accepted; the outcome arrives on the sync listener.
+ */
+export function forceSyncNow(callback?: ForceSyncCallback): Promise<void>;
+/** Offline: current sync state (synchronous). */
+export function getSyncState(): SyncState;
+/** Offline: server time, in seconds, of the last completed sync (0 if never). */
+export function getLastSyncTimestamp(): Promise<number>;
+/** Offline: register a sync/cache observer. */
+export function addSyncListener(id: string, listener: SyncListener): void;
+export function removeSyncListener(id: string): void;
+/**
+ * Offline: download + cache a media message's attachment bytes; resolves with the local path. With offline not
+ * active it resolves `null` and the listener's failure callback fires once with `ERROR_OFFLINE_DISABLED`.
+ */
+export function downloadMedia(message: MediaMessage | any, listener?: DownloadMediaListener): Promise<string | null>;
+/** Offline: local path of a media message's cached bytes, or null if not cached. */
+export function getCachedMediaPath(message: MediaMessage | any): Promise<string | null>;
+/** Offline: register a global media-download observer (background AUTO / sweep downloads). */
+export function addMediaDownloadListener(id: string, listener: MediaDownloadListener): Promise<void>;
+/** Offline: remove a global media-download observer. */
+export function removeMediaDownloadListener(id: string): void;
+/** Offline: total local bytes on disk (DB + media). */
+export function getCacheSize(): Promise<number>;
+/**
+ * Offline: empty the per-user cache in place (the store stays open and keeps its key) and delete
+ * its media. Each PENDING/SENDING message not already posted ends with `onError` /
+ * `onOutboxMessageFailed`, reason `DISCARDED`; one already posted that the server then accepts is
+ * reported sent (`onMessageSent` / `onOutboxMessageSent`) and not cached again, otherwise it ends
+ * `DISCARDED`. FAILED ones are removed silently. No-op unless offline is active.
+ */
+export function clearOfflineCache(): Promise<void>;
+/** Offline: be told when the SDK wiped and rebuilt the cache on its own (unreadable / corrupt store, encryption change). */
+export function addOfflineCacheResetListener(id: string, listener: OfflineCacheResetListener): void;
+export function removeOfflineCacheResetListener(id: string): void;
+/**
+ * Offline: whether offline messaging is actually active right now for the logged-in user — the
+ * app enabled it, the server has not switched it off, and the local store is open. False before
+ * login, after logout, while the server switch is off, while dormant because encryption cannot
+ * run, and during a settings restart. Synchronous. UI layers call this at the moment of each
+ * offline-dependent decision and keep no copy of the answer.
+ */
+export function isOfflineEnabled(): boolean;
+
+/**
+ * Offline: what the on-device cache encryption is actually doing — what was proven, not what was
+ * configured. `cipherAvailable: false` means SQLCipher is not in the build; `keyStorage: "NONE"`
+ * means no secure key store. Never returns the key or its length.
+ */
+export function getOfflineEncryptionStatus(): OfflineEncryptionStatus;
+
+/**
+ * Offline: the media caching mode in effect — `OfflineConfig.mediaCaching` while offline is active,
+ * and `OFF` whenever `isOfflineEnabled()` is false. Fixed for the SDK session.
+ */
+export function getMediaCachingMode(): MediaCachingMode;
 
 }

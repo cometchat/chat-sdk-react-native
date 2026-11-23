@@ -1,8 +1,9 @@
 {
   "name": "@cometchat/chat-sdk-react-native",
-  "version": "4.1.0",
+  "version": "4.2.1",
   "description": "A complete chat solution.",
   "main": "CometChat.js",
+  "types": "CometChat.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -33,5 +34,23 @@
     "url": "https://github.com/cometchat-pro/react-native-chat-sdk/issues"
   },
   "homepage": "https://github.com/cometchat-pro/react-native-chat-sdk#readme",
-  "types": "./CometChat.d.ts"
+  "peerDependencies": {
+    "@op-engineering/op-sqlite": "*",
+    "@react-native-async-storage/async-storage": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-fs": "*",
+    "react-native-keychain": "*"
+  },
+  "peerDependenciesMeta": {
+    "@op-engineering/op-sqlite": {
+      "optional": true
+    },
+    "react-native-fs": {
+      "optional": true
+    },
+    "react-native-keychain": {
+      "optional": true
+    }
+  }
 }
